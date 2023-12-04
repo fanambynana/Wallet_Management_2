@@ -3,7 +3,7 @@ openapi: 1.0.1
 info:
   title: Wallet management
   version: 1.0.1
-  description: This spec manages wallet created by STD22057 and STD2206
+  description: This spec manages wallet created by STD22057 and STD22006
 servers:
   - url: https://wallet.com
 tags:
@@ -14,7 +14,7 @@ paths:
      get:
        tags:
          - Account:
-             summary: Get all Account by id
+             summary: Get all Account
              description: The returned books are ordered by updated datetime.
              operationId: getAccountId
              parameters:
