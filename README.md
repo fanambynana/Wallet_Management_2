@@ -1,6 +1,6 @@
-# Wallet Gestion
+# Wallet Management
 
-Wallet gestion and budget tracking.
+Wallet management and budget tracking.
 
 Petstore link : [click here](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/fanambynana/Wallet_Gestion/main/OAS/api.yml) or copy the link below
 

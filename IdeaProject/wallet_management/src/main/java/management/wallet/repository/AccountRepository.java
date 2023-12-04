@@ -1,7 +1,7 @@
-package gestion.wallet.repository;
+package management.wallet.repository;
 
-import gestion.wallet.dbConnection.DbConnect;
-import gestion.wallet.model.Account;
+import management.wallet.dbConnection.DbConnect;
+import management.wallet.model.Account;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;

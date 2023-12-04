@@ -1,7 +1,7 @@
-package gestion.wallet.service;
+package management.wallet.service;
 
-import gestion.wallet.model.Account;
-import gestion.wallet.repository.AccountRepository;
+import management.wallet.model.Account;
+import management.wallet.repository.AccountRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
