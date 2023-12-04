@@ -2,10 +2,10 @@
 
 Wallet management and budget tracking.
 
-Petstore link : [click here](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/fanambynana/Wallet_Gestion/main/OAS/api.yml) or copy the link below
+Petstore link : [click here](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/fanambynana/Wallet_Management/main/OAS/WalletApi.yaml) or copy the link below
 
 ```
-https://petstore.swagger.io/?url=https://raw.githubusercontent.com/fanambynana/Wallet_Gestion/main/OAS/api.yml
+https://petstore.swagger.io/?url=https://raw.githubusercontent.com/fanambynana/Wallet_Management/main/OAS/WalletApi.yaml
 ```
 
 *Collaborators :*
