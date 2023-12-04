@@ -28,6 +28,8 @@ public class VerificationSelect {
                         resultSet.getDouble("balance")
                 );
             }
+            statement.close();
+            resultSet.close();
         } catch (SQLException sqlException) {
             System.out.println("Verification error :\n" + sqlException.getMessage());
         }
@@ -47,8 +49,10 @@ public class VerificationSelect {
                         resultSet.getDouble("balance")
                 );
             }
-        } catch (SQLException sqlException) {
-            System.out.println("Verification error :\n" + sqlException.getMessage());
+            statement.close();
+            resultSet.close();
+        } catch (SQLException exception) {
+            System.out.println("Verification error :\n" + exception.getMessage());
         }
         return null;
     }

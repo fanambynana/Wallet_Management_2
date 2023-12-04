@@ -9,5 +9,5 @@ public interface CrudOperation<T> {
 
     T save(T toSave);
 
-    T delete(T toDelete);
+    // T delete(T toDelete);
 }
