@@ -16,6 +16,11 @@ public class TransactionCrudOperation implements CrudOperation<Transaction>{
     }
 
     @Override
+    public Transaction findById(int id) {
+        return repository.findById(id);
+    }
+
+    @Override
     public List<Transaction> saveAll(List<Transaction> toSave) {
         return repository.saveAll(toSave);
     }

@@ -87,4 +87,52 @@ public class AccountRepository {
         }
         return null;
     }
+
+    public Account findById(int id) {
+        try {
+            String query = "SELECT * FROM account WHERE id = " + id;
+            Statement statement = connection.createStatement();
+            ResultSet resultSet  = statement.executeQuery(query);
+
+            if (resultSet.next()) {
+                return new Account(
+                        resultSet.getInt("id"),
+                        resultSet.getString("username"),
+                        resultSet.getString("currency"),
+                        resultSet.getDouble("balance")
+                );
+            }
+            statement.close();
+            resultSet.close();
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while finding the account :\n"
+                    + exception.getMessage()
+            );
+        }
+        return null;
+    }
+
+    public Account findByUsername(String username) {
+        try {
+            String query = "SELECT * FROM account WHERE username = " + username;
+            Statement statement = connection.createStatement();
+            ResultSet resultSet  = statement.executeQuery(query);
+
+            if (resultSet.next()) {
+                return new Account(
+                        resultSet.getInt("id"),
+                        resultSet.getString("username"),
+                        resultSet.getString("currency"),
+                        resultSet.getDouble("balance")
+                );
+            }
+            statement.close();
+            resultSet.close();
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while finding the account :\n"
+                    + exception.getMessage()
+            );
+        }
+        return null;
+    }
 }

@@ -32,13 +32,12 @@ public class TransactionRepository {
             }
             statement.close();
             resultSet.close();
-            return transactions;
         } catch (SQLException exception) {
             System.out.println("Error occurred while finding all transactions :\n"
                     + exception.getMessage()
             );
         }
-        return null;
+        return transactions;
     }
 
     public List<Transaction> saveAll(List<Transaction> toSave) {
@@ -86,6 +85,31 @@ public class TransactionRepository {
             }
         } catch (SQLException exception) {
             System.out.println("Error occurred while saving the transaction :\n"
+                    + exception.getMessage()
+            );
+        }
+        return null;
+    }
+
+    public Transaction findById(int id) {
+        try {
+            String query = "SELECT * FROM transaction WHERE id = " + id;
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+
+            if (resultSet.next()) {
+                return new Transaction(
+                        resultSet.getInt("id"),
+                        resultSet.getString("description"),
+                        resultSet.getDouble("amaount"),
+                        resultSet.getString("type"),
+                        resultSet.getString("correspondent")
+                );
+            }
+            statement.close();
+            resultSet.close();
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while finding the transaction :\n"
                     + exception.getMessage()
             );
         }
