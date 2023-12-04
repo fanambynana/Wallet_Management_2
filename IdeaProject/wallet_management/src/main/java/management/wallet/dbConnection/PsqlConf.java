@@ -1,4 +1,4 @@
-package gestion.wallet.dbConnection;
+package management.wallet.dbConnection;
 
 public class PsqlConf {
     public static final String URL = System.getenv("DB_URL");

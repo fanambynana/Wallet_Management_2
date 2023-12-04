@@ -1,4 +1,4 @@
-package gestion.wallet.dbConnection;
+package management.wallet.dbConnection;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

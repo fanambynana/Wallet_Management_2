@@ -14,6 +14,7 @@ paths:
     get:
       tags:
         - Account
+
       summary: Get an Account by ID
       description: Return details of a specific account
       operationId: getAccountById
@@ -108,6 +109,27 @@ paths:
           description: Bad request, invalid input, or existing data conflict
         '404':
           description: Transaction not found
+summary: Get all Account
+description: The returned books are ordered by updated dat
+operationId: getAccountId
+parameters:
+  in: path
+  name: id
+  description: the ID of the account to get
+  required: true
+  schema:
+    type: integer
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        $ref: '#/components/schemas/Account'
+
+responses:
+  '200':
+    description: Successful retrieval of account data.
+
 
 components:
   schemas:
@@ -123,7 +145,6 @@ components:
         balance:
           type: double
 
-
     Transaction:
       type: object
       properties:
@@ -137,3 +158,4 @@ components:
           type: string
         correspondent:
           type: string
+
