@@ -41,7 +41,6 @@ public class AccountRepository {
 
     public List<Account> saveAll(List<Account> toSave) {
         List<Account> existingAccounts = new ArrayList<>();
-        List<Account> allAccounts = new ArrayList<>();
         try {
             for (Account account : toSave) {
                 if (verification.verifyAccountByUsername(account.getUsername()) != null) {
@@ -55,25 +54,16 @@ public class AccountRepository {
                     preparedStatement.setString(1, account.getUsername());
                     preparedStatement.setString(2, account.getCurrency());
                     preparedStatement.setDouble(3, account.getBalance());
-
-                    ResultSet resultSet = preparedStatement.getResultSet();
-                    while (resultSet.next()) {
-                        allAccounts.add(new Account(
-                                resultSet.getInt("id"),
-                                resultSet.getString("username"),
-                                resultSet.getString("currency"),
-                                resultSet.getDouble("balance")
-                        ));
-                    }
+                    preparedStatement.close();
+                    return toSave;
                 }
             }
-           String query = "";
         } catch (SQLException exception) {
             System.out.println("Error occurred while saving all accounts :\n"
                 + exception.getMessage()
             );
         }
-        return allAccounts;
+        return null;
     }
 
     public Account save(Account toSave) {
@@ -87,19 +77,11 @@ public class AccountRepository {
                 preparedStatement.setString(1, toSave.getUsername());
                 preparedStatement.setString(2, toSave.getCurrency());
                 preparedStatement.setDouble(3, toSave.getBalance());
-
-                ResultSet resultSet = preparedStatement.getResultSet();
-                if (resultSet.next()) {
-                    return new Account(
-                            resultSet.getInt("id"),
-                            resultSet.getString("username"),
-                            resultSet.getString("currency"),
-                            resultSet.getDouble("balance")
-                    );
-                }
+                preparedStatement.close();
+                return toSave;
             }
         } catch (SQLException exception) {
-            System.out.println("Error occured while saving the account :\n"
+            System.out.println("Error occurred while saving the account :\n"
                 + exception.getMessage()
             );
         }
