@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>gestion.wallet</groupId>
-    <artifactId>wallet_gestion</artifactId>
+    <artifactId>wallet_management</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>wallet_gestion</name>
     <description>wallet_gestion</description>

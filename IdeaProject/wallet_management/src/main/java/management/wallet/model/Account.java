@@ -1,4 +1,4 @@
-package gestion.wallet.model;
+package management.wallet.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
