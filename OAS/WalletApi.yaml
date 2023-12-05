@@ -7,19 +7,66 @@ info:
 servers:
   - url: https://management.wallet
 tags:
-  - Account
-  - Transaction
+  - name: Account
+  - name: Transaction
 paths:
-  /account:
+  /accounts:
     get:
       tags:
         - Account
-
-      summary: Get an Account by ID
+      summary: Get all Accounts
+      description: Return all accounts
+      operationId: getAllAccounts
+      responses:
+        '200':
+          description: Successful retrieval of account data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+        '500':
+          description: Internal server error
+    put:
+      tags:
+        - Account
+      summary: Create or update an or a list of account
+      description: Create if the account does not exists, otherwise update it
+      operationId: crupdateAccounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: array
+                  items:
+                    $ref: '#/components/schemas/Account'
+                - $ref: '#/components/schemas/Account'
+      responses:
+        '200':
+          description: Account created or updated successfully
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/Account'
+                  - $ref: '#/components/schemas/Account'
+        '400':
+          description: Bad or invalid request
+        '500':
+          description: Internal server error
+  /accounts/{id}:
+    get:
+      tags:
+        - Account
+      summary: Get account by ID
       description: Return details of a specific account
       operationId: getAccountById
       parameters:
-        - in: query
+        - in: path
           name: id
           description: The ID of the account to retrieve
           required: true
@@ -27,110 +74,89 @@ paths:
             type: integer
       responses:
         '200':
-          description: Successful retrieval of account data.
+          description: Successful retrieval of account data
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Account'
-
-  /account{id}:
-    put:
-      tags:
-        - Account
-      summary: modify acount by ID
-      description: Create if the account does not exist, otherwise update it
-      operationId: accountId
-      parameters:
-        - in: query
-          name: id
-          required: true
-          description: id of account modified
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Successful modification of the account
-        '201':
-          description: account created successfully if it didn't exist before
-        '400':
-          description: Bad request, invalid input, or existing data conflict
         '404':
-          description: account not found
-  /transaction:
+          description: Account not found or does not exists
+        '505':
+          description: Internal server error
+  /transactions:
     get:
       tags:
         - Transaction
       summary: Get all transactions
       description: Return all transactions
       operationId: getAllTransactions
-      parameters:
-        - in: query
-          name: id
-          description: The ID of the account to get transactions for
-          required: true
-          schema:
-            type: integer
       responses:
         '200':
-          description: A list of transactions
+          description: Successful retrieval of transaction data
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Transaction'
-
-  /transaction/{id}:
+        '500':
+          description: Internal server error
     put:
       tags:
         - Transaction
-      summary: Modify a transaction by ID
-      description: Create if the transaction does not exist, otherwise update it
-      operationId: transactionId
-      parameters:
-        - in: path
-          name: id
-          description: The ID of the transaction to modify
-          required: true
-          schema:
-            type: integer
+      summary: Create or update a or a list of transaction
+      description: Create if the transaction does not exists, otherwise update it
+      operationId: crupdateTransaction
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Transaction'
+              oneOf:
+                - type: array
+                  items:
+                    $ref: '#/components/schemas/Transaction'
+                - $ref: '#/components/schemas/Transaction'
       responses:
         '200':
-          description: Successful modification of the transaction
-        '201':
-          description: Transaction created successfully if it didn't exist before
+          description: Transaction created or updated successfully
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/Transaction'
+                  - $ref: '#/components/schemas/Transaction'
         '400':
-          description: Bad request, invalid input, or existing data conflict
+          description: Bad or invalid request
+        '500':
+          description: Internal server error
+  /transactions/{id}:
+    get:
+      tags:
+        - Transaction
+      summary: Get transaction by ID
+      description: Return details of a specific transaction
+      operationId: getTransactionById
+      parameters:
+        - in: path
+          name: id
+          description: The ID of the transaction to retrieve
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful retrieval of transaction data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
         '404':
-          description: Transaction not found
-summary: Get all Account
-description: The returned books are ordered by updated dat
-operationId: getAccountId
-parameters:
-  in: path
-  name: id
-  description: the ID of the account to get
-  required: true
-  schema:
-    type: integer
-requestBody:
-  required: true
-  content:
-    application/json:
-      schema:
-        $ref: '#/components/schemas/Account'
-
-responses:
-  '200':
-    description: Successful retrieval of account data.
-
-
+          description: Transaction not found or does not exists
+        '505':
+          description: Internal server error
 components:
   schemas:
     Account:
@@ -143,8 +169,8 @@ components:
         currency:
           type: string
         balance:
-          type: double
-
+          type: number
+          format: double
     Transaction:
       type: object
       properties:
@@ -153,9 +179,9 @@ components:
         description:
           type: string
         amount:
-          type: double
+          type: number
+          format: double
         type:
           type: string
         correspondent:
           type: string
-
