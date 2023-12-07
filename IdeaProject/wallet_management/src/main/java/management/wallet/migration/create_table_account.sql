@@ -1,9 +1,11 @@
-CREATE TYPE "name" AS ENUM('current_account', 'saving_account');
-CREATE TYPE "type" AS ENUM('bank', 'cash', 'mobile money');
+CREATE TYPE "ACCOUNT_NAME" AS ENUM('current_account', 'saving_account');
+CREATE TYPE "ACCOUNT_TYPE" AS ENUM('bank', 'cash', 'mobile money');
 
 CREATE TABLE IF NOT EXISTS account(
     id SERIAL PRIMARY KEY,
-    username VARCHAR(255) NOT NULL,
-    currency VARCHAR(10) NOT NULL ,
-    balance DOUBLE PRECISION DEFAULT 0
+    accountName ACCOUNT_NAME NOT NULL,
+    balance DECIMAL NOT NULL,
+    balanceUpdateDateTime TIMESTAMP NOT NULL,
+    currency VARCHAR(10) NOT NULL,
+    accountType ACCOUNT_TYPE NOT NULL
 );
