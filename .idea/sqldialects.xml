@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SqlDialectMappings">
+    <file url="file://$PROJECT_DIR$/IdeaProject/wallet_management/src/main/java/management/wallet/migration/create_table_account.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/IdeaProject/wallet_management/src/main/java/management/wallet/migration/create_table_currency.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/IdeaProject/wallet_management/src/main/java/management/wallet/migration/create_table_transaction.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/IdeaProject/wallet_management/src/main/java/management/wallet/migration/insert_into_account.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/IdeaProject/wallet_management/src/main/java/management/wallet/migration/insert_into_currency.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/IdeaProject/wallet_management/src/main/java/management/wallet/migration/insert_into_transaction.sql" dialect="PostgreSQL" />
+  </component>
+</project>

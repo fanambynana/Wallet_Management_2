@@ -1,7 +1,8 @@
+CREATE TYPE TRANSACTIONS AS ENUM('debit', 'credit')
 CREATE TABLE IF NOT EXISTS transaction(
     id SERIAL PRIMARY KEY ,
-    description TEXT,
-    amount DOUBLE PRECISION NOT NULL ,
-    type VARCHAR(255) NOT NULL CHECK ( type = 'revenu'OR type = 'dépense' OR type = 'transfert'),
-    correspondent VARCHAR(255)
+    label VARCHAR(50) NOT NULL,
+    amount BIGDECIMAL NOT NULL ,
+    transactionDate LOCAL DATE TIME NOT NULL,
+    transactionsType TRANSACTIONS NOT NULL
 );
