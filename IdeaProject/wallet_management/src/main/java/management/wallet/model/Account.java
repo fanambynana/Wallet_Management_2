@@ -14,6 +14,6 @@ public class Account {
     private AccountName accountName;
     private BigDecimal balanceAmount;
     private LocalDateTime balanceUpdateDateTime;
-    private String currency;
+    private int currencyId;
     private AccountType accountType;
 }
