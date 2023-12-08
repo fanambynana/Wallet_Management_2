@@ -2,15 +2,16 @@ package management.wallet.DAO;
 
 import management.wallet.dbConnection.DbConnect;
 import management.wallet.model.Transaction;
+import management.wallet.model.TransactionType;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Repository
 public class TransactionDAO {
-    VerificationSelect verification;
     DbConnect dbConnect = new DbConnect();
     Connection connection = dbConnect.createConnection();
 
@@ -24,10 +25,10 @@ public class TransactionDAO {
             while (resultSet.next()) {
                 transactions.add(new Transaction(
                         resultSet.getInt("id"),
-                        resultSet.getString("description"),
-                        resultSet.getDouble("amaount"),
-                        resultSet.getString("type"),
-                        resultSet.getString("correspondent")
+                        resultSet.getString("label"),
+                        resultSet.getBigDecimal("amount"),
+                        (LocalDateTime) resultSet.getObject("transaction_date"),
+                        (TransactionType) resultSet.getObject("transaction_type")
                 ));
             }
             statement.close();
@@ -40,25 +41,50 @@ public class TransactionDAO {
         return transactions;
     }
 
+    public Transaction findById(int id) {
+        try {
+            String query = "SELECT * FROM transaction WHERE id = ? ";
+            PreparedStatement statement = connection.prepareStatement(query);
+            ResultSet resultSet = statement.getResultSet();
+
+            if (resultSet.next()) {
+                return new Transaction(
+                        resultSet.getInt("id"),
+                        resultSet.getString("label"),
+                        resultSet.getBigDecimal("amount"),
+                        (LocalDateTime) resultSet.getObject("transaction_date"),
+                        (TransactionType) resultSet.getObject("transaction_type")
+                );
+            }
+            statement.close();
+            resultSet.close();
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while finding the transaction :\n"
+                    + exception.getMessage()
+            );
+        }
+        return null;
+    }
+
     public List<Transaction> saveAll(List<Transaction> toSave) {
         List<Transaction> existingTransactions = new ArrayList<>();
         try {
             for (Transaction transaction : toSave) {
-                if (verification.verifyTransactionById(transaction.getId()) != null) {
-                    existingTransactions.add(transaction);
-                } else {
+                if (findById(transaction.getId()) == null) {
                     String query = """
-                        INSERT INTO transaction(description, amount, type, correspondent)
+                        INSERT INTO transaction(label, amount, transaction_date, transaction_type)
                         VALUES(?, ?, ?, ?)
                     """;
                     PreparedStatement preparedStatement = connection.prepareStatement(query);
-                    preparedStatement.setString(1, transaction.getDescription());
-                    preparedStatement.setDouble(2, transaction.getAmount());
-                    preparedStatement.setString(3, transaction.getType());
-                    preparedStatement.setString(4, transaction.getCorrespondent());
+                    preparedStatement.setString(1, transaction.getLabel());
+                    preparedStatement.setBigDecimal(2, transaction.getAmount());
+                    preparedStatement.setObject(3, transaction.getTransactionDate());
+                    preparedStatement.setObject(4, transaction.getTransactionsType());
                     preparedStatement.close();
-                    return toSave;
+                } else {
+                    // update it
                 }
+                return toSave;
             }
         } catch (SQLException exception) {
             System.out.println("Error occurred while saving all accounts :\n"
@@ -70,46 +96,23 @@ public class TransactionDAO {
 
     public Transaction save(Transaction toSave) {
         try {
-            if (verification.verifyTransactionById(toSave.getId()) == null) {
+            if (findById(toSave.getId()) == null) {
                 String query = """
-                        INSERT INTO transaction(description, amount, type, correspondent)
+                        INSERT INTO transaction(label, amount, transaction_date, transaction_type)
                         VALUES(?, ?, ?, ?)
                     """;
                 PreparedStatement preparedStatement = connection.prepareStatement(query);
-                preparedStatement.setString(1, toSave.getDescription());
-                preparedStatement.setDouble(2, toSave.getAmount());
-                preparedStatement.setString(3, toSave.getType());
-                preparedStatement.setString(4, toSave.getCorrespondent());
+                preparedStatement.setString(1, toSave.getLabel());
+                preparedStatement.setBigDecimal(2, toSave.getAmount());
+                preparedStatement.setObject(3, toSave.getTransactionDate());
+                preparedStatement.setObject(4, toSave.getTransactionsType());
                 preparedStatement.close();
                 return toSave;
+            } else {
+                // update it
             }
         } catch (SQLException exception) {
             System.out.println("Error occurred while saving the transaction :\n"
-                    + exception.getMessage()
-            );
-        }
-        return null;
-    }
-
-    public Transaction findById(int id) {
-        try {
-            String query = "SELECT * FROM transaction WHERE id = " + id;
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(query);
-
-            if (resultSet.next()) {
-                return new Transaction(
-                        resultSet.getInt("id"),
-                        resultSet.getString("description"),
-                        resultSet.getDouble("amaount"),
-                        resultSet.getString("type"),
-                        resultSet.getString("correspondent")
-                );
-            }
-            statement.close();
-            resultSet.close();
-        } catch (SQLException exception) {
-            System.out.println("Error occurred while finding the transaction :\n"
                     + exception.getMessage()
             );
         }
