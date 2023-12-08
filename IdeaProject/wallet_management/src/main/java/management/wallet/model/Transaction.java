@@ -2,7 +2,6 @@ package management.wallet.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,10 +13,5 @@ public class Transaction {
     private String label;
     private BigDecimal amount;
     private LocalDateTime transactionDate;
-    private TransactionsType transactionsType;
-
-    public enum TransactionsType {
-        DEBIT,
-        CREDIT
-    }
+    private TransactionType transactionsType;
 }

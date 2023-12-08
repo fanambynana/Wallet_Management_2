@@ -2,9 +2,11 @@ package management.wallet.repository;
 
 import management.wallet.dbConnection.DbConnect;
 import management.wallet.model.Account;
+import management.wallet.model.Currency;
 import management.wallet.model.AccountName;
 import management.wallet.model.AccountType;
 import management.wallet.model.Transaction;
+
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
@@ -50,6 +52,26 @@ public class VerificationSelect {
                         resultSet.getDouble("amount"),
                         resultSet.getString("type"),
                         resultSet.getString("correspondant")
+                );
+            }
+        } catch (SQLException sqlException) {
+            System.out.println("Verification error :\n" + sqlException.getMessage());
+        }
+        return null;
+    }
+
+    public Currency verifyCurrencyByCode(String code) {
+        try {
+            String query = " SELECT * FROM currency WHERE code = ? ";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, code);
+            ResultSet resultSet = statement.getResultSet();
+
+            if (resultSet.next()) {
+                return new Currency(
+                        resultSet.getInt("id"),
+                        resultSet.getString("name"),
+                        resultSet.getString("coe")
                 );
             }
         } catch (SQLException sqlException) {
