@@ -16,11 +16,11 @@ public class AccountDAO {
     Connection connection = dbConnect.createConnection();
 
     public List<Account> findAll() {
-        List<Account> accounts  = new ArrayList<>();
+        List<Account> accounts = new ArrayList<>();
         try {
             String query = "SELECT * FROM account";
             PreparedStatement statement = connection.prepareStatement(query);
-            ResultSet resultSet  = statement.executeQuery();
+            ResultSet resultSet = statement.executeQuery();
 
             while (resultSet.next()) {
                 accounts.add(new Account(
@@ -36,7 +36,7 @@ public class AccountDAO {
             resultSet.close();
         } catch (SQLException exception) {
             System.out.println("Error occurred while finding all accounts :\n"
-                + exception.getMessage()
+                    + exception.getMessage()
             );
         }
         return accounts;
@@ -57,8 +57,9 @@ public class AccountDAO {
                     preparedStatement.setInt(4, account.getId());
                     preparedStatement.setObject(5, account.getAccountType());
                     preparedStatement.close();
-                } else {
-                    // update it
+                }
+                    else {
+                    UpdateById(account.getId(), account);
                 }
             }
             return toSave;
@@ -119,4 +120,28 @@ public class AccountDAO {
         }
         return null;
     }
-}
+    public boolean UpdateById (int id, Account accountUpdated) {
+        try {
+            String query = """
+            UPDATE account
+            SET account_name = ?, balance_amount = ?, balance_update_date_time = ?, currency_id = ?, account_type = ?
+            WHERE id = ?
+        """;
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setObject(1, accountUpdated.getAccountName());
+            preparedStatement.setBigDecimal(2, accountUpdated.getBalanceAmount());
+            preparedStatement.setTimestamp(3, Timestamp.valueOf(accountUpdated.getBalanceUpdateDateTime()));
+            preparedStatement.setInt(4, accountUpdated.getCurrencyId());
+            preparedStatement.setObject(5, accountUpdated.getAccountType());
+            preparedStatement.setInt(6, id);
+
+            int rowsUpdated = preparedStatement.executeUpdate();
+            preparedStatement.close();
+
+            return rowsUpdated > 0;
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while updating account :\n" + exception.getMessage());
+            return false;
+        }
+    }
+  }
