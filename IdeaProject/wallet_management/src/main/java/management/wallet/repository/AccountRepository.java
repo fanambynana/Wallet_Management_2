@@ -29,7 +29,7 @@ public class AccountRepository {
                         (AccountName) resultSet.getObject("account_name"),
                         resultSet.getBigDecimal("balance_amount"),
                         resultSet.getTimestamp("balanceUpdateDateTime").toLocalDateTime(),
-                        resultSet.getString("currency"),
+                        resultSet.getInt("currency_id"),
                         (AccountType) resultSet.getObject("account_type")
                 ));
             }
@@ -47,17 +47,19 @@ public class AccountRepository {
         List<Account> existingAccounts = new ArrayList<>();
         try {
             for (Account account : toSave) {
-                if (verification.verifyAccountByUsername(account.getUsername()) != null) {
+                if (verification.verifyAccountById(account.getId()) != null) {
                     existingAccounts.add(account);
                 } else {
                     String query = """
-                        INSERT INTO account(username, currency, balance)
-                        VALUES(?, ?, ?)
+                        INSERT INTO account(accountName, balanceAmount, balanceUpdateDateTime, currencyId, accountType)
+                        VALUES(?, ?, ?, ?, ?)
                     """;
                     PreparedStatement preparedStatement = connection.prepareStatement(query);
-                    preparedStatement.setString(1, account.getUsername());
-                    preparedStatement.setString(2, account.getCurrency());
-                    preparedStatement.setDouble(3, account.getBalance());
+                    preparedStatement.setObject(1, account.getAccountName());
+                    preparedStatement.setBigDecimal(2, account.getBalanceAmount());
+                    preparedStatement.setTimestamp(3, Timestamp.valueOf(account.getBalanceUpdateDateTime()));
+                    preparedStatement.setInt(4, account.getId());
+                    preparedStatement.setObject(5, account.getAccountType());
                     preparedStatement.close();
                     return toSave;
                 }
