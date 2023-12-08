@@ -1,7 +1,6 @@
 package management.wallet.DAO;
 
 import management.wallet.dbConnection.DbConnect;
-import management.wallet.model.Account;
 import management.wallet.model.Currency;
 import org.springframework.stereotype.Repository;
 
@@ -13,7 +12,6 @@ import java.util.List;
 public class CurrencyDAO {
     DbConnect dbConnect = new DbConnect();
     Connection connection = dbConnect.createConnection();
-    VerificationSelect verification;
 
     public List<Currency> findAll() {
         List<Currency> currencies  = new ArrayList<>();
@@ -37,6 +35,52 @@ public class CurrencyDAO {
             );
         }
         return currencies;
+    }
+
+    public Currency findById(int id) {
+        try {
+            String query = "SELECT * FROM currency WHERE id = ? ";
+            PreparedStatement statement = connection.prepareStatement(query);
+            ResultSet resultSet  = statement.getResultSet();
+
+            if (resultSet.next()) {
+                return new Currency(
+                        resultSet.getInt("id"),
+                        resultSet.getString("name"),
+                        resultSet.getString("code")
+                );
+            }
+            statement.close();
+            resultSet.close();
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while finding the currency :\n"
+                    + exception.getMessage()
+            );
+        }
+        return null;
+    }
+
+    public Currency findByCode(String code) {
+        try {
+            String query = "SELECT * FROM currency WHERE code = ? ";
+            PreparedStatement statement = connection.prepareStatement(query);
+            ResultSet resultSet  = statement.getResultSet();
+
+            if (resultSet.next()) {
+                return new Currency(
+                        resultSet.getInt("id"),
+                        resultSet.getString("name"),
+                        resultSet.getString("code")
+                );
+            }
+            statement.close();
+            resultSet.close();
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while finding the currency :\n"
+                    + exception.getMessage()
+            );
+        }
+        return null;
     }
 
     public List<Currency> saveAll(List<Currency> toSave) {
@@ -81,52 +125,6 @@ public class CurrencyDAO {
             return toSave;
         } catch (SQLException exception) {
             System.out.println("Error occurred while saving the currency :\n"
-                    + exception.getMessage()
-            );
-        }
-        return null;
-    }
-
-    public Currency findById(int id) {
-        try {
-            String query = "SELECT * FROM currency WHERE id = ? ";
-            PreparedStatement statement = connection.prepareStatement(query);
-            ResultSet resultSet  = statement.getResultSet();
-
-            if (resultSet.next()) {
-                return new Currency(
-                        resultSet.getInt("id"),
-                        resultSet.getString("name"),
-                        resultSet.getString("code")
-                );
-            }
-            statement.close();
-            resultSet.close();
-        } catch (SQLException exception) {
-            System.out.println("Error occurred while finding the currency :\n"
-                    + exception.getMessage()
-            );
-        }
-        return null;
-    }
-
-    public Currency findByCode(String code) {
-        try {
-            String query = "SELECT * FROM currency WHERE code = ? ";
-            PreparedStatement statement = connection.prepareStatement(query);
-            ResultSet resultSet  = statement.getResultSet();
-
-            if (resultSet.next()) {
-                return new Currency(
-                        resultSet.getInt("id"),
-                        resultSet.getString("name"),
-                        resultSet.getString("code")
-                );
-            }
-            statement.close();
-            resultSet.close();
-        } catch (SQLException exception) {
-            System.out.println("Error occurred while finding the currency :\n"
                     + exception.getMessage()
             );
         }
