@@ -1,4 +1,4 @@
-package management.wallet.repository;
+package management.wallet.DAO;
 
 import management.wallet.dbConnection.DbConnect;
 import management.wallet.model.Transaction;
@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Repository
-public class TransactionRepository {
+public class TransactionDAO {
     VerificationSelect verification;
     DbConnect dbConnect = new DbConnect();
     Connection connection = dbConnect.createConnection();

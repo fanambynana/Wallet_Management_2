@@ -1,14 +1,14 @@
 package management.wallet.service;
 
 import management.wallet.model.Transaction;
-import management.wallet.repository.TransactionRepository;
+import management.wallet.DAO.TransactionDAO;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 public class TransactionCrudOperation implements CrudOperation<Transaction>{
-    TransactionRepository repository;
+    TransactionDAO repository;
 
     @Override
     public List<Transaction> findAll() {
