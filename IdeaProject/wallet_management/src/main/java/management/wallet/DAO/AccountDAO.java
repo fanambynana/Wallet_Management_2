@@ -1,4 +1,4 @@
-package management.wallet.repository;
+package management.wallet.DAO;
 
 import management.wallet.dbConnection.DbConnect;
 import management.wallet.model.Account;
@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Repository
-public class AccountRepository {
+public class AccountDAO {
     DbConnect dbConnect = new DbConnect();
     Connection connection = dbConnect.createConnection();
     VerificationSelect verification;
