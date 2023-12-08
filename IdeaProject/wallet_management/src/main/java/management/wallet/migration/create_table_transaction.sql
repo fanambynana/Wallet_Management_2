@@ -1,8 +1,9 @@
-CREATE TYPE TRANSACTIONS AS ENUM('debit', 'credit')
+CREATE TYPE TRANSACTION_TYPE AS ENUM('debit', 'credit');
+
 CREATE TABLE IF NOT EXISTS transaction(
     id SERIAL PRIMARY KEY ,
     label VARCHAR(50) NOT NULL,
-    amount BIGDECIMAL NOT NULL ,
-    transactionDate LOCAL DATE TIME NOT NULL,
-    transactionsType TRANSACTIONS NOT NULL
+    amount DECIMAL NOT NULL ,
+    date TIMESTAMP NOT NULL,
+    transactionsType TRANSACTION_TYPE NOT NULL
 );
