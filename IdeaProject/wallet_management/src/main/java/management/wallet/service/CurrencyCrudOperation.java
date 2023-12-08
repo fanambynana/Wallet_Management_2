@@ -1,32 +1,32 @@
 package management.wallet.service;
 
-import management.wallet.model.Account;
-import management.wallet.DAO.AccountDAO;
+import management.wallet.DAO.CurrencyDAO;
+import management.wallet.model.Currency;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public class AccountCrudOperation implements CrudOperation<Account>{
-    AccountDAO repository;
+public class CurrencyCrudOperation implements CrudOperation<Currency>{
+    CurrencyDAO repository;
 
     @Override
-    public List<Account> findAll() {
+    public List<Currency> findAll() {
         return repository.findAll();
     }
 
     @Override
-    public Account findById(int id) {
+    public Currency findById(int id) {
         return repository.findById(id);
     }
 
     @Override
-    public List<Account> saveAll(List<Account> toSave) {
+    public List<Currency> saveAll(List<Currency> toSave) {
         return repository.saveAll(toSave);
     }
 
     @Override
-    public Account save(Account toSave) {
+    public Currency save(Currency toSave) {
         return repository.save(toSave);
     }
 }
