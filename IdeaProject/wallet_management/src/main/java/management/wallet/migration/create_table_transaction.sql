@@ -4,6 +4,6 @@ CREATE TABLE IF NOT EXISTS transaction(
     id SERIAL PRIMARY KEY ,
     label VARCHAR(50) NOT NULL,
     amount DECIMAL NOT NULL ,
-    date TIMESTAMP NOT NULL,
-    transactionsType TRANSACTION_TYPE NOT NULL
+    transaction_date TIMESTAMP NOT NULL,
+    transaction_type TRANSACTION_TYPE NOT NULL
 );
