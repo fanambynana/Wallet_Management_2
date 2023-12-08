@@ -40,96 +40,93 @@ public class CurrencyDAO {
     }
 
     public List<Currency> saveAll(List<Currency> toSave) {
-        List<Currency> existingAccounts = new ArrayList<>();
         try {
             for (Currency currency : toSave) {
-                if (verification.verifyCurrencyByCode(currency.getCode()) != null) {
-                    existingAccounts.add(currency);
-                } else {
+                if (findById(currency.getId()) == null || findByCode(currency.getCode()) == null) {
                     String query = """
-                        INSERT INTO account(username, currency, balance)
-                        VALUES(?, ?, ?)
+                        INSERT INTO currency(name, code)
+                        VALUES(?, ?)
                     """;
                     PreparedStatement preparedStatement = connection.prepareStatement(query);
-                    preparedStatement.setString(1, account.getUsername());
-                    preparedStatement.setString(2, account.getCurrency());
-                    preparedStatement.setDouble(3, account.getBalance());
+                    preparedStatement.setString(1, currency.getName());
+                    preparedStatement.setString(2, currency.getCode());
                     preparedStatement.close();
-                    return toSave;
+                } else {
+                    // update it
                 }
-            }
-        } catch (SQLException exception) {
-            System.out.println("Error occurred while saving all accounts :\n"
-                    + exception.getMessage()
-            );
-        }
-        return null;
-    }
-
-    public Account save(Account toSave) {
-        try {
-            if (verification.verifyAccountByUsername(toSave.getUsername()) == null) {
-                String query = """
-                        INSERT INTO account(username, currency, balance)
-                        VALUES(?, ?, ?)
-                    """;
-                PreparedStatement preparedStatement = connection.prepareStatement(query);
-                preparedStatement.setString(1, toSave.getUsername());
-                preparedStatement.setString(2, toSave.getCurrency());
-                preparedStatement.setDouble(3, toSave.getBalance());
-                preparedStatement.close();
                 return toSave;
             }
         } catch (SQLException exception) {
-            System.out.println("Error occurred while saving the account :\n"
+            System.out.println("Error occurred while saving all currencies :\n"
                     + exception.getMessage()
             );
         }
         return null;
     }
 
-    public Account findById(int id) {
+    public Currency save(Currency toSave) {
         try {
-            String query = "SELECT * FROM account WHERE id = " + id;
-            Statement statement = connection.createStatement();
-            ResultSet resultSet  = statement.executeQuery(query);
-
-            if (resultSet.next()) {
-                return new Account(
-                        resultSet.getInt("id"),
-                        resultSet.getString("username"),
-                        resultSet.getString("currency"),
-                        resultSet.getDouble("balance")
-                );
+            if (findById(toSave.getId()) == null || findByCode(toSave.getCode()) == null) {
+                String query = """
+                        INSERT INTO currency(name, code)
+                        VALUES(?, ?)
+                    """;
+                PreparedStatement preparedStatement = connection.prepareStatement(query);
+                preparedStatement.setString(1, toSave.getName());
+                preparedStatement.setString(2, toSave.getCode());
+                preparedStatement.close();
+            } else {
+                // update it
             }
-            statement.close();
-            resultSet.close();
+            return toSave;
         } catch (SQLException exception) {
-            System.out.println("Error occurred while finding the account :\n"
+            System.out.println("Error occurred while saving the currency :\n"
                     + exception.getMessage()
             );
         }
         return null;
     }
 
-    public Account findByUsername(String username) {
+    public Currency findById(int id) {
         try {
-            String query = "SELECT * FROM account WHERE username = " + username;
-            Statement statement = connection.createStatement();
-            ResultSet resultSet  = statement.executeQuery(query);
+            String query = "SELECT * FROM currency WHERE id = ? ";
+            PreparedStatement statement = connection.prepareStatement(query);
+            ResultSet resultSet  = statement.getResultSet();
 
             if (resultSet.next()) {
-                return new Account(
+                return new Currency(
                         resultSet.getInt("id"),
-                        resultSet.getString("username"),
-                        resultSet.getString("currency"),
-                        resultSet.getDouble("balance")
+                        resultSet.getString("name"),
+                        resultSet.getString("code")
                 );
             }
             statement.close();
             resultSet.close();
         } catch (SQLException exception) {
-            System.out.println("Error occurred while finding the account :\n"
+            System.out.println("Error occurred while finding the currency :\n"
+                    + exception.getMessage()
+            );
+        }
+        return null;
+    }
+
+    public Currency findByCode(String code) {
+        try {
+            String query = "SELECT * FROM currency WHERE code = ? ";
+            PreparedStatement statement = connection.prepareStatement(query);
+            ResultSet resultSet  = statement.getResultSet();
+
+            if (resultSet.next()) {
+                return new Currency(
+                        resultSet.getInt("id"),
+                        resultSet.getString("name"),
+                        resultSet.getString("code")
+                );
+            }
+            statement.close();
+            resultSet.close();
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while finding the currency :\n"
                     + exception.getMessage()
             );
         }
