@@ -11,14 +11,9 @@ import java.time.LocalDateTime;
 @Data
 public class Account {
     private int id;
-    private String accountName;
+    private AccountName accountName;
     private BigDecimal balanceAmount;
     private LocalDateTime balanceUpdateDateTime;
     private String currency;
     private AccountType accountType;
-
-    public enum AccountType {
-        CURRENT_ACCOUNT,
-        SAVINGS_ACCOUNT
-    }
 }

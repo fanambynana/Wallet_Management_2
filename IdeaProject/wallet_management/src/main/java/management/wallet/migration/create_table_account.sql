@@ -1,4 +1,4 @@
-CREATE TYPE ACCOUNT_NAME AS ENUM('current_account', 'saving_account');
+CREATE TYPE ACCOUNT_NAME AS ENUM('current_account', 'savings_account');
 CREATE TYPE ACCOUNT_TYPE AS ENUM('bank', 'cash', 'mobile money');
 
 CREATE TABLE IF NOT EXISTS "account"(
