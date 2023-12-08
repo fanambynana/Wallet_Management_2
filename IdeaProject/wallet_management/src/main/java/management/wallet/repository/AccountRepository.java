@@ -2,6 +2,8 @@ package management.wallet.repository;
 
 import management.wallet.dbConnection.DbConnect;
 import management.wallet.model.Account;
+import management.wallet.model.AccountName;
+import management.wallet.model.AccountType;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
@@ -18,15 +20,17 @@ public class AccountRepository {
         List<Account> accounts  = new ArrayList<>();
         try {
             String query = "SELECT * FROM account";
-            Statement statement = connection.createStatement();
-            ResultSet resultSet  = statement.executeQuery(query);
+            PreparedStatement statement = connection.prepareStatement(query);
+            ResultSet resultSet  = statement.executeQuery();
 
             while (resultSet.next()) {
                 accounts.add(new Account(
                         resultSet.getInt("id"),
-                        resultSet.getString("username"),
-                        resultSet.getString("currency"),
-                        resultSet.getDouble("balance")
+                        (AccountName) resultSet.getObject("account_name"),
+                        resultSet.getBigDecimal("balance_amount"),
+                        resultSet.getTimestamp("balanceUpdateDateTime").toLocalDateTime(),
+                        resultSet.getInt("currency_id"),
+                        (AccountType) resultSet.getObject("account_type")
                 ));
             }
             statement.close();
@@ -43,17 +47,19 @@ public class AccountRepository {
         List<Account> existingAccounts = new ArrayList<>();
         try {
             for (Account account : toSave) {
-                if (verification.verifyAccountByUsername(account.getUsername()) != null) {
+                if (verification.verifyAccountById(account.getId()) != null) {
                     existingAccounts.add(account);
                 } else {
                     String query = """
-                        INSERT INTO account(username, currency, balance)
-                        VALUES(?, ?, ?)
+                        INSERT INTO account(accountName, balanceAmount, balanceUpdateDateTime, currencyId, accountType)
+                        VALUES(?, ?, ?, ?, ?)
                     """;
                     PreparedStatement preparedStatement = connection.prepareStatement(query);
-                    preparedStatement.setString(1, account.getUsername());
-                    preparedStatement.setString(2, account.getCurrency());
-                    preparedStatement.setDouble(3, account.getBalance());
+                    preparedStatement.setObject(1, account.getAccountName());
+                    preparedStatement.setBigDecimal(2, account.getBalanceAmount());
+                    preparedStatement.setTimestamp(3, Timestamp.valueOf(account.getBalanceUpdateDateTime()));
+                    preparedStatement.setInt(4, account.getId());
+                    preparedStatement.setObject(5, account.getAccountType());
                     preparedStatement.close();
                     return toSave;
                 }
@@ -68,15 +74,17 @@ public class AccountRepository {
 
     public Account save(Account toSave) {
         try {
-            if (verification.verifyAccountByUsername(toSave.getUsername()) == null) {
+            if (verification.verifyAccountById(toSave.getId()) == null) {
                 String query = """
-                        INSERT INTO account(username, currency, balance)
-                        VALUES(?, ?, ?)
+                        INSERT INTO account(accountName, balanceAmount, balanceUpdateDateTime, currencyId, accountType)
+                        VALUES(?, ?, ?, ?, ?)
                     """;
                 PreparedStatement preparedStatement = connection.prepareStatement(query);
-                preparedStatement.setString(1, toSave.getUsername());
-                preparedStatement.setString(2, toSave.getCurrency());
-                preparedStatement.setDouble(3, toSave.getBalance());
+                preparedStatement.setObject(1, toSave.getAccountName());
+                preparedStatement.setBigDecimal(2, toSave.getBalanceAmount());
+                preparedStatement.setTimestamp(3, Timestamp.valueOf(toSave.getBalanceUpdateDateTime()));
+                preparedStatement.setInt(4, toSave.getId());
+                preparedStatement.setObject(5, toSave.getAccountType());
                 preparedStatement.close();
                 return toSave;
             }
@@ -90,49 +98,26 @@ public class AccountRepository {
 
     public Account findById(int id) {
         try {
-            String query = "SELECT * FROM account WHERE id = " + id;
-            Statement statement = connection.createStatement();
-            ResultSet resultSet  = statement.executeQuery(query);
+            String query = " SELECT * FROM account WHERE id = ? ";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, id);
+            ResultSet resultSet = statement.executeQuery();
 
             if (resultSet.next()) {
                 return new Account(
                         resultSet.getInt("id"),
-                        resultSet.getString("username"),
-                        resultSet.getString("currency"),
-                        resultSet.getDouble("balance")
+                        (AccountName) resultSet.getObject("account_name"),
+                        resultSet.getBigDecimal("balance_amount"),
+                        resultSet.getTimestamp("balanceUpdateDateTime").toLocalDateTime(),
+                        resultSet.getInt("currencyId"),
+                        (AccountType) resultSet.getObject("account_type")
                 );
             }
-            statement.close();
-            resultSet.close();
-        } catch (SQLException exception) {
-            System.out.println("Error occurred while finding the account :\n"
-                    + exception.getMessage()
-            );
+        } catch (SQLException sqlException) {
+            System.out.println("Verification error :\n" + sqlException.getMessage());
         }
         return null;
     }
 
-    public Account findByUsername(String username) {
-        try {
-            String query = "SELECT * FROM account WHERE username = " + username;
-            Statement statement = connection.createStatement();
-            ResultSet resultSet  = statement.executeQuery(query);
 
-            if (resultSet.next()) {
-                return new Account(
-                        resultSet.getInt("id"),
-                        resultSet.getString("username"),
-                        resultSet.getString("currency"),
-                        resultSet.getDouble("balance")
-                );
-            }
-            statement.close();
-            resultSet.close();
-        } catch (SQLException exception) {
-            System.out.println("Error occurred while finding the account :\n"
-                    + exception.getMessage()
-            );
-        }
-        return null;
-    }
 }
