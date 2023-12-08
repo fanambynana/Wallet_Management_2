@@ -20,10 +20,6 @@ public class AccountCrudOperation implements CrudOperation<Account>{
         return repository.findById(id);
     }
 
-    public Account findByUsername(String username) {
-        return repository.findByUsername(username);
-    }
-
     @Override
     public List<Account> saveAll(List<Account> toSave) {
         return repository.saveAll(toSave);
