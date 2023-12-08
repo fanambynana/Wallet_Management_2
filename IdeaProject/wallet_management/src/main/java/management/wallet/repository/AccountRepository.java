@@ -2,6 +2,8 @@ package management.wallet.repository;
 
 import management.wallet.dbConnection.DbConnect;
 import management.wallet.model.Account;
+import management.wallet.model.AccountName;
+import management.wallet.model.AccountType;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
@@ -18,15 +20,17 @@ public class AccountRepository {
         List<Account> accounts  = new ArrayList<>();
         try {
             String query = "SELECT * FROM account";
-            Statement statement = connection.createStatement();
-            ResultSet resultSet  = statement.executeQuery(query);
+            PreparedStatement statement = connection.prepareStatement(query);
+            ResultSet resultSet  = statement.executeQuery();
 
             while (resultSet.next()) {
                 accounts.add(new Account(
                         resultSet.getInt("id"),
-                        resultSet.getString("username"),
+                        (AccountName) resultSet.getObject("account_name"),
+                        resultSet.getBigDecimal("balance_amount"),
+                        resultSet.getTimestamp("balanceUpdateDateTime").toLocalDateTime(),
                         resultSet.getString("currency"),
-                        resultSet.getDouble("balance")
+                        (AccountType) resultSet.getObject("account_type")
                 ));
             }
             statement.close();
