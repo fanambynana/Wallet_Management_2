@@ -6,6 +6,7 @@ import management.wallet.model.Transaction;
 import management.wallet.model.TransactionType;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -132,6 +133,26 @@ public class TransactionDAO {
             preparedStatement.setBigDecimal(2, transactionUpdated.getAmount());
             preparedStatement.setTimestamp(3, Timestamp.valueOf(transactionUpdated.getTransactionDate()));
             preparedStatement.setInt(4, id);
+
+            int rowsUpdated = preparedStatement.executeUpdate();
+            preparedStatement.close();
+
+            return rowsUpdated > 0;
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while updating account :\n" + exception.getMessage());
+            return false;
+        }
+    }
+    public boolean UpdateAmountById (int id, BigDecimal amount) {
+        try {
+            String query = """
+            UPDATE account
+            SET amount = ?
+            WHERE id = ?
+        """;
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setBigDecimal(1, amount);
+            preparedStatement.setInt(2, id);
 
             int rowsUpdated = preparedStatement.executeUpdate();
             preparedStatement.close();
