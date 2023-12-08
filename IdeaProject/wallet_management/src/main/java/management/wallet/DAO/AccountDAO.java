@@ -14,7 +14,6 @@ import java.util.List;
 public class AccountDAO {
     DbConnect dbConnect = new DbConnect();
     Connection connection = dbConnect.createConnection();
-    VerificationSelect verification;
 
     public List<Account> findAll() {
         List<Account> accounts  = new ArrayList<>();
@@ -28,7 +27,7 @@ public class AccountDAO {
                         resultSet.getInt("id"),
                         (AccountName) resultSet.getObject("account_name"),
                         resultSet.getBigDecimal("balance_amount"),
-                        resultSet.getTimestamp("balanceUpdateDateTime").toLocalDateTime(),
+                        resultSet.getTimestamp("balance_update_date_time").toLocalDateTime(),
                         resultSet.getInt("currency_id"),
                         (AccountType) resultSet.getObject("account_type")
                 ));
@@ -44,14 +43,11 @@ public class AccountDAO {
     }
 
     public List<Account> saveAll(List<Account> toSave) {
-        List<Account> existingAccounts = new ArrayList<>();
         try {
             for (Account account : toSave) {
-                if (verification.verifyAccountById(account.getId()) != null) {
-                    existingAccounts.add(account);
-                } else {
+                if (findById(account.getId()) == null) {
                     String query = """
-                        INSERT INTO account(accountName, balanceAmount, balanceUpdateDateTime, currencyId, accountType)
+                        INSERT INTO account(account_name, balance_amount, balance_update_date_time, currency_id, account_type)
                         VALUES(?, ?, ?, ?, ?)
                     """;
                     PreparedStatement preparedStatement = connection.prepareStatement(query);
@@ -61,35 +57,13 @@ public class AccountDAO {
                     preparedStatement.setInt(4, account.getId());
                     preparedStatement.setObject(5, account.getAccountType());
                     preparedStatement.close();
-                    return toSave;
+                } else {
+                    // update it
                 }
             }
+            return toSave;
         } catch (SQLException exception) {
             System.out.println("Error occurred while saving all accounts :\n"
-                + exception.getMessage()
-            );
-        }
-        return null;
-    }
-
-    public Account save(Account toSave) {
-        try {
-            if (verification.verifyAccountById(toSave.getId()) == null) {
-                String query = """
-                        INSERT INTO account(accountName, balanceAmount, balanceUpdateDateTime, currencyId, accountType)
-                        VALUES(?, ?, ?, ?, ?)
-                    """;
-                PreparedStatement preparedStatement = connection.prepareStatement(query);
-                preparedStatement.setObject(1, toSave.getAccountName());
-                preparedStatement.setBigDecimal(2, toSave.getBalanceAmount());
-                preparedStatement.setTimestamp(3, Timestamp.valueOf(toSave.getBalanceUpdateDateTime()));
-                preparedStatement.setInt(4, toSave.getId());
-                preparedStatement.setObject(5, toSave.getAccountType());
-                preparedStatement.close();
-                return toSave;
-            }
-        } catch (SQLException exception) {
-            System.out.println("Error occurred while saving the account :\n"
                 + exception.getMessage()
             );
         }
@@ -108,16 +82,41 @@ public class AccountDAO {
                         resultSet.getInt("id"),
                         (AccountName) resultSet.getObject("account_name"),
                         resultSet.getBigDecimal("balance_amount"),
-                        resultSet.getTimestamp("balanceUpdateDateTime").toLocalDateTime(),
+                        resultSet.getTimestamp("balance_update_date_time").toLocalDateTime(),
                         resultSet.getInt("currencyId"),
                         (AccountType) resultSet.getObject("account_type")
                 );
             }
         } catch (SQLException sqlException) {
-            System.out.println("Verification error :\n" + sqlException.getMessage());
+            System.out.println("Error occurred while finding the account :\n"
+                    + sqlException.getMessage());
         }
         return null;
     }
 
-
+    public Account save(Account toSave) {
+        try {
+            if (findById(toSave.getId()) == null) {
+                String query = """
+                        INSERT INTO account(account_name, balance_amount, balance_update_date_time, currency_id, account_type)
+                        VALUES(?, ?, ?, ?, ?)
+                    """;
+                PreparedStatement preparedStatement = connection.prepareStatement(query);
+                preparedStatement.setObject(1, toSave.getAccountName());
+                preparedStatement.setBigDecimal(2, toSave.getBalanceAmount());
+                preparedStatement.setTimestamp(3, Timestamp.valueOf(toSave.getBalanceUpdateDateTime()));
+                preparedStatement.setInt(4, toSave.getId());
+                preparedStatement.setObject(5, toSave.getAccountType());
+                preparedStatement.close();
+            } else {
+                // update it
+            }
+            return toSave;
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while saving the account :\n"
+                + exception.getMessage()
+            );
+        }
+        return null;
+    }
 }
