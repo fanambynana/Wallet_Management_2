@@ -1,6 +1,7 @@
 package management.wallet.DAO;
 
 import management.wallet.dbConnection.DbConnect;
+import management.wallet.model.Account;
 import management.wallet.model.Currency;
 import org.springframework.stereotype.Repository;
 
@@ -120,7 +121,7 @@ public class CurrencyDAO {
                 preparedStatement.setString(2, toSave.getCode());
                 preparedStatement.close();
             } else {
-                // update it
+                UpdateById(toSave.getId(), toSave);
             }
             return toSave;
         } catch (SQLException exception) {
@@ -129,5 +130,26 @@ public class CurrencyDAO {
             );
         }
         return null;
+    }
+    public boolean UpdateById (int id, Currency currencyUpdated) {
+        try {
+            String query = """
+            UPDATE account
+            SET name = ?, code = ?, 
+            WHERE id = ?
+        """;
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, currencyUpdated.getName());
+            preparedStatement.setString(2, currencyUpdated.getCode());
+            preparedStatement.setInt(3, id);
+
+            int rowsUpdated = preparedStatement.executeUpdate();
+            preparedStatement.close();
+
+            return rowsUpdated > 0;
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while updating account :\n" + exception.getMessage());
+            return false;
+        }
     }
 }

@@ -1,6 +1,7 @@
 package management.wallet.DAO;
 
 import management.wallet.dbConnection.DbConnect;
+import management.wallet.model.Account;
 import management.wallet.model.Transaction;
 import management.wallet.model.TransactionType;
 import org.springframework.stereotype.Repository;
@@ -80,9 +81,10 @@ public class TransactionDAO {
                     preparedStatement.setBigDecimal(2, transaction.getAmount());
                     preparedStatement.setObject(3, transaction.getTransactionDate());
                     preparedStatement.setObject(4, transaction.getTransactionsType());
+
                     preparedStatement.close();
                 } else {
-                    // update it
+                  UpdateById(transaction.getId(), transaction );
                 }
                 return toSave;
             }
@@ -117,5 +119,27 @@ public class TransactionDAO {
             );
         }
         return null;
+    }
+    public boolean UpdateById (int id, Transaction transactionUpdated) {
+        try {
+            String query = """
+            UPDATE account
+            SET label = ?, amount = ?, transaction_date = ?
+            WHERE id = ?
+        """;
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, transactionUpdated.getLabel());
+            preparedStatement.setBigDecimal(2, transactionUpdated.getAmount());
+            preparedStatement.setTimestamp(3, Timestamp.valueOf(transactionUpdated.getTransactionDate()));
+            preparedStatement.setInt(4, id);
+
+            int rowsUpdated = preparedStatement.executeUpdate();
+            preparedStatement.close();
+
+            return rowsUpdated > 0;
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while updating account :\n" + exception.getMessage());
+            return false;
+        }
     }
 }
