@@ -138,4 +138,24 @@ public class AccountDAO {
             return false;
         }
     }
+    public boolean updateBalanceIdById (int accountId, int balanceId) {
+        try {
+            String query = """
+            UPDATE account
+                SET balance_id = ?
+                WHERE id = ?
+            """;
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setObject(1, balanceId);
+            preparedStatement.setInt(2, accountId);
+
+            int rowsUpdated = preparedStatement.executeUpdate();
+            preparedStatement.close();
+
+            return rowsUpdated > 0;
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while updating the account balance id :\n" + exception.getMessage());
+            return false;
+        }
+    }
   }
