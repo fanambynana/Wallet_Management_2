@@ -46,6 +46,7 @@ public class BalanceDAO {
         try {
             String query = "SELECT * FROM balance WHERE id = ? ";
             PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, id);
             ResultSet resultSet  = statement.getResultSet();
 
             if (resultSet.next()) {
@@ -64,7 +65,29 @@ public class BalanceDAO {
         }
         return null;
     }
+    public Balance findByDateTime(LocalDateTime dateTime) {
+        try {
+            String query = "SELECT * FROM balance WHERE update_date_time = ? ";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setObject(1, dateTime);
+            ResultSet resultSet  = statement.getResultSet();
 
+            if (resultSet.next()) {
+                return new Balance(
+                        resultSet.getInt("id"),
+                        resultSet.getBigDecimal("amount"),
+                        (LocalDateTime) resultSet.getObject("update_datetime")
+                );
+            }
+            statement.close();
+            resultSet.close();
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while finding the balance :\n"
+                    + exception.getMessage()
+            );
+        }
+        return null;
+    }
     public List<Balance> saveAll(List<Balance> toSave) {
         try {
             for (Balance balance : toSave) {

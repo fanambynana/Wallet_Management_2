@@ -52,39 +52,39 @@ public class ManageTransactional {
 
     public Account makeTransaction(int accountId, Transaction transaction) {
         beginTransactional();
-        AccountSave account = accountDAO.findById(accountId);
-        Transaction transactionSaved = transactionDAO.save(transaction);
-        Balance balanceSaved = balanceDAO.save(new Balance(
-                0,
-                transactionSaved.getAmount(),
-                LocalDateTime.now()
-        ));
-        BalanceHistory balanceHistorySaved = balanceHistoryDAO.save(new BalanceHistory(
-                0,
-                balanceSaved.getId(),
-                account.getId(),
-                LocalDateTime.now()
-        ));
-        boolean isUpdated =
-                balanceSaved != null
-                &&
-                balanceHistorySaved != null
-                &&
-                transactionSaved != null;
-
-
-        if (isUpdated) {
-            commitTransactional();
-            return new Account(
+        try {
+            AccountSave account = accountDAO.findById(accountId);
+            Transaction transactionSaved = transactionDAO.save(transaction);
+            Balance balanceSaved = balanceDAO.save(new Balance(
+                    0,
+                    transactionSaved.getAmount(),
+                    LocalDateTime.now()
+            ));
+            BalanceHistory balanceHistorySaved = balanceHistoryDAO.save(new BalanceHistory(
+                    0,
+                    balanceSaved.getId(),
                     account.getId(),
-                    account.getAccountName(),
-                    balanceSaved,
-                    transactionDAO.findByAccountId(accountId),
-                    currencyDAO.findById(account.getCurrencyId()),
-                    account.getAccountType()
-            );
-        } else {
+                    LocalDateTime.now()
+            ));
+            boolean accountUpdated = accountDAO.updateBalanceIdById(accountId, balanceSaved.getId());
+            if (accountUpdated) {
+                commitTransactional();
+                return new Account(
+                        account.getId(),
+                        account.getAccountName(),
+                        balanceSaved,
+                        transactionDAO.findByAccountId(accountId),
+                        currencyDAO.findById(account.getCurrencyId()),
+                        account.getAccountType()
+                );
+            } else {
+                rollbackTransactional();
+            }
+        } catch (Exception exception) {
             rollbackTransactional();
+            System.out.println("Error occurred while making the transaction :\n"
+                + exception.getMessage()
+            );
         }
         return null;
     }
