@@ -44,6 +44,7 @@ public class TransactionDAO {
         try {
             String query = "SELECT * FROM \"transaction\" WHERE id = ? ";
             PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, id);
             ResultSet resultSet = statement.getResultSet();
 
             if (resultSet.next()) {
@@ -69,6 +70,7 @@ public class TransactionDAO {
         try {
             String query = "SELECT * FROM \"transaction\" WHERE account_id = ? ";
             PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, id);
             ResultSet resultSet = statement.getResultSet();
 
             while (resultSet.next()) {

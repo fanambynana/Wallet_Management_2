@@ -47,6 +47,7 @@ public class BalanceHistoryDAO {
         try {
             String query = "SELECT * FROM balance_history WHERE id = ? ";
             PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, id);
             ResultSet resultSet  = statement.getResultSet();
 
             if (resultSet.next()) {

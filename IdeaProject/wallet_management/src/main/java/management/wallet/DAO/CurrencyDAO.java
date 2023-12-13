@@ -41,6 +41,7 @@ public class CurrencyDAO {
         try {
             String query = "SELECT * FROM currency WHERE id = ? ";
             PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, id);
             ResultSet resultSet  = statement.getResultSet();
 
             if (resultSet.next()) {
@@ -64,6 +65,7 @@ public class CurrencyDAO {
         try {
             String query = "SELECT * FROM currency WHERE code = ? ";
             PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, code);
             ResultSet resultSet  = statement.getResultSet();
 
             if (resultSet.next()) {
