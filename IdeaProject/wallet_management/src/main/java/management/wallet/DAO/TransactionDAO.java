@@ -164,7 +164,8 @@ public class TransactionDAO {
 
             return rowsUpdated > 0;
         } catch (SQLException exception) {
-            System.out.println("Error occurred while updating account :\n" + exception.getMessage());
+            System.out.println("Error occurred while updating the transaction :\n"
+                    + exception.getMessage());
             return false;
         }
     }

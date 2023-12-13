@@ -13,5 +13,5 @@ public class Transaction {
     private String label;
     private BigDecimal amount;
     private LocalDateTime transactionDate;
-    private TransactionType transactionsType;
+    private TransactionType transactionType;
 }

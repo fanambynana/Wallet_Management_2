@@ -1,6 +1,8 @@
 package management.wallet.DAO;
 
 import management.wallet.dbConnection.DbConnect;
+import management.wallet.model.Account;
+import management.wallet.model.AccountGet;
 import management.wallet.model.Transaction;
 import org.springframework.stereotype.Repository;
 
@@ -12,6 +14,9 @@ import java.sql.SQLException;
 public class ManageTransactional {
     DbConnect dbConnect = new DbConnect();
     Connection connection = dbConnect.createConnection();
+    AccountDAO accountDAO;
+    TransactionDAO transactionDAO;
+    CurrencyDAO currencyDAO;
 
     public void beginTransactional() {
         try {
@@ -44,10 +49,26 @@ public class ManageTransactional {
         }
     }
 
-    public boolean makeTransaction(int accountId, Transaction transaction) {
+    public AccountGet makeTransaction(int accountId, Transaction transaction) {
         beginTransactional();
-        // transaction here
-        // commit if no error occurred, else rollback
-        return false;
+        boolean isUpdated = accountDAO.updateAmountById(accountId, transaction.getAmount());
+        Transaction saved = transactionDAO.save(transaction);
+
+        if (isUpdated && saved != null) {
+            commitTransactional();
+            Account account = accountDAO.findById(accountId);
+            return new AccountGet(
+                    account.getId(),
+                    account.getAccountName(),
+                    account.getBalanceAmount(),
+                    account.getBalanceUpdateDateTime(),
+                    transactionDAO.findByAccountId(accountId),
+                    currencyDAO.findById(account.getCurrencyId()).getCode(),
+                    account.getAccountType()
+            );
+        } else {
+            rollbackTransactional();
+        }
+        return null;
     }
 }
