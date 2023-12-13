@@ -32,6 +32,6 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
 
     @Override
     public boolean update(AccountSave toUpdate) {
-        return false;
+        return repository.update(toUpdate);
     }
 }

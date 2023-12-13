@@ -29,4 +29,9 @@ public class CurrencyCrudOperation implements CrudOperation<Currency>{
     public Currency save(Currency toSave) {
         return repository.save(toSave);
     }
+
+    @Override
+    public boolean update(Currency toUpdate) {
+        return repository.update(toUpdate);
+    }
 }

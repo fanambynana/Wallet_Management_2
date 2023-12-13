@@ -29,4 +29,9 @@ public class TransactionCrudOperation implements CrudOperation<Transaction>{
     public Transaction save(Transaction toSave) {
         return repository.save(toSave);
     }
+
+    @Override
+    public boolean update(Transaction toUpdate) {
+        return repository.update(toUpdate);
+    }
 }
