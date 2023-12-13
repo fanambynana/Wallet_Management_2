@@ -1,32 +1,37 @@
 package management.wallet.service;
 
-import management.wallet.model.Account;
+import management.wallet.model.AccountSave;
 import management.wallet.DAO.AccountDAO;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public class AccountCrudOperation implements CrudOperation<Account>{
+public class AccountCrudOperation implements CrudOperation<AccountSave>{
     AccountDAO repository;
 
     @Override
-    public List<Account> findAll() {
+    public List<AccountSave> findAll() {
         return repository.findAll();
     }
 
     @Override
-    public Account findById(int id) {
+    public AccountSave findById(int id) {
         return repository.findById(id);
     }
 
     @Override
-    public List<Account> saveAll(List<Account> toSave) {
+    public List<AccountSave> saveAll(List<AccountSave> toSave) {
         return repository.saveAll(toSave);
     }
 
     @Override
-    public Account save(Account toSave) {
+    public AccountSave save(AccountSave toSave) {
         return repository.save(toSave);
+    }
+
+    @Override
+    public boolean update(AccountSave toUpdate) {
+        return false;
     }
 }

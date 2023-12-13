@@ -1,7 +1,6 @@
 package management.wallet.DAO;
 
 import management.wallet.dbConnection.DbConnect;
-import management.wallet.model.Account;
 import management.wallet.model.Currency;
 import org.springframework.stereotype.Repository;
 
@@ -148,7 +147,7 @@ public class CurrencyDAO {
 
             return rowsUpdated > 0;
         } catch (SQLException exception) {
-            System.out.println("Error occurred while updating currency :\n"
+            System.out.println("Error occurred while updating the currency :\n"
                     + exception.getMessage());
             return false;
         }

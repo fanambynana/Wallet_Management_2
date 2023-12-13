@@ -1,0 +1,5 @@
+INSERT INTO balance(amount, update_datetime)
+VALUES
+(2500.00, CURRENT_TIMESTAMP),
+(100000.00, '2023-12-01 09:00:00'),
+(0.00, '2023-10-14 20:45:00')

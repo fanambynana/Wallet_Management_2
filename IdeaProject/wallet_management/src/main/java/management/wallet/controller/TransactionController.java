@@ -1,6 +1,5 @@
 package management.wallet.controller;
 
-import management.wallet.model.Account;
 import management.wallet.model.Transaction;
 import management.wallet.service.TransactionCrudOperation;
 import org.springframework.web.bind.annotation.*;

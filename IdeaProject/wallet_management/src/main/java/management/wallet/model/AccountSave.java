@@ -3,15 +3,12 @@ package management.wallet.model;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.util.List;
-
 @AllArgsConstructor
 @Data
-public class Account {
+public class AccountSave {
     private int id;
     private AccountName accountName;
-    private Balance balance;
-    private List<Transaction> transactions;
-    private Currency currency;
+    private int balanceId;
+    private int currencyId;
     private AccountType accountType;
 }

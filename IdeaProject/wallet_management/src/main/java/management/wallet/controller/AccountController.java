@@ -1,6 +1,6 @@
 package management.wallet.controller;
 
-import management.wallet.model.Account;
+import management.wallet.model.AccountSave;
 import management.wallet.service.AccountCrudOperation;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,19 +12,19 @@ public class AccountController {
     AccountCrudOperation service;
 
     @GetMapping("/accounts")
-    public List<Account> findAll() {
+    public List<AccountSave> findAll() {
         return service.findAll();
     }
     @PutMapping("/accounts")
-    public List<Account> saveAll(List<Account> toSave) {
+    public List<AccountSave> saveAll(List<AccountSave> toSave) {
         return service.saveAll(toSave);
     }
     @PutMapping("/accounts")
-    public Account save(Account toSave) {
+    public AccountSave save(AccountSave toSave) {
         return service.save(toSave);
     }
     @GetMapping("/accounts/{id}")
-    public Account findById(@PathVariable int id) {
+    public AccountSave findById(@PathVariable int id) {
         return service.findById(id);
     }
 }

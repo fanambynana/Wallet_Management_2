@@ -10,4 +10,6 @@ public interface CrudOperation<T> {
     List<T> saveAll(List<T> toSave);
 
     T save(T toSave);
+
+    boolean update(T toUpdate);
 }

@@ -1,14 +1,13 @@
 package management.wallet.DAO;
 
 import management.wallet.dbConnection.DbConnect;
-import management.wallet.model.Account;
-import management.wallet.model.AccountGet;
-import management.wallet.model.Transaction;
+import management.wallet.model.*;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 
 @Repository
 public class ManageTransactional {
@@ -17,6 +16,8 @@ public class ManageTransactional {
     AccountDAO accountDAO;
     TransactionDAO transactionDAO;
     CurrencyDAO currencyDAO;
+    BalanceDAO balanceDAO;
+    BalanceHistoryDAO balanceHistoryDAO;
 
     public void beginTransactional() {
         try {
@@ -49,21 +50,37 @@ public class ManageTransactional {
         }
     }
 
-    public AccountGet makeTransaction(int accountId, Transaction transaction) {
+    public Account makeTransaction(int accountId, Transaction transaction) {
         beginTransactional();
-        boolean isUpdated = accountDAO.updateAmountById(accountId, transaction.getAmount());
-        Transaction saved = transactionDAO.save(transaction);
+        AccountSave account = accountDAO.findById(accountId);
+        Transaction transactionSaved = transactionDAO.save(transaction);
+        Balance balanceSaved = balanceDAO.save(new Balance(
+                0,
+                transactionSaved.getAmount(),
+                LocalDateTime.now()
+        ));
+        BalanceHistory balanceHistorySaved = balanceHistoryDAO.save(new BalanceHistory(
+                0,
+                balanceSaved.getId(),
+                account.getId(),
+                LocalDateTime.now()
+        ));
+        boolean isUpdated =
+                balanceSaved != null
+                &&
+                balanceHistorySaved != null
+                &&
+                transactionSaved != null;
 
-        if (isUpdated && saved != null) {
+
+        if (isUpdated) {
             commitTransactional();
-            Account account = accountDAO.findById(accountId);
-            return new AccountGet(
+            return new Account(
                     account.getId(),
                     account.getAccountName(),
-                    account.getBalanceAmount(),
-                    account.getBalanceUpdateDateTime(),
+                    balanceSaved,
                     transactionDAO.findByAccountId(accountId),
-                    currencyDAO.findById(account.getCurrencyId()).getCode(),
+                    currencyDAO.findById(account.getCurrencyId()),
                     account.getAccountType()
             );
         } else {
