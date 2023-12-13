@@ -1,7 +1,6 @@
 package management.wallet.DAO;
 
 import management.wallet.dbConnection.DbConnect;
-import management.wallet.model.Account;
 import management.wallet.model.Currency;
 import org.springframework.stereotype.Repository;
 

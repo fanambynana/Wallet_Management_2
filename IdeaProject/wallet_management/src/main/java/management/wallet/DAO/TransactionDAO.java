@@ -1,12 +1,10 @@
 package management.wallet.DAO;
 
 import management.wallet.dbConnection.DbConnect;
-import management.wallet.model.Account;
 import management.wallet.model.Transaction;
 import management.wallet.model.TransactionType;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
