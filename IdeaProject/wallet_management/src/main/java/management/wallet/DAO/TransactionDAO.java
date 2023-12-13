@@ -42,10 +42,9 @@ public class TransactionDAO {
         }
         return transactions;
     }
-
     public Transaction findById(int id) {
         try {
-            String query = "SELECT * FROM transaction WHERE id = ? ";
+            String query = "SELECT * FROM \"transaction\" WHERE id = ? ";
             PreparedStatement statement = connection.prepareStatement(query);
             ResultSet resultSet = statement.getResultSet();
 
@@ -67,6 +66,31 @@ public class TransactionDAO {
         }
         return null;
     }
+    public List<Transaction> findByAccountId(int id) {
+        List<Transaction> transactions = new ArrayList<>();
+        try {
+            String query = "SELECT * FROM \"transaction\" WHERE account_id = ? ";
+            PreparedStatement statement = connection.prepareStatement(query);
+            ResultSet resultSet = statement.getResultSet();
+
+            while (resultSet.next()) {
+                transactions.add(new Transaction(
+                        resultSet.getInt("id"),
+                        resultSet.getString("label"),
+                        resultSet.getBigDecimal("amount"),
+                        (LocalDateTime) resultSet.getObject("transaction_date"),
+                        (TransactionType) resultSet.getObject("transaction_type")
+                ));
+            }
+            statement.close();
+            resultSet.close();
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while finding the transaction :\n"
+                    + exception.getMessage()
+            );
+        }
+        return transactions;
+    }
 
     public List<Transaction> saveAll(List<Transaction> toSave) {
         List<Transaction> existingTransactions = new ArrayList<>();
@@ -74,18 +98,18 @@ public class TransactionDAO {
             for (Transaction transaction : toSave) {
                 if (findById(transaction.getId()) == null) {
                     String query = """
-                        INSERT INTO transaction(label, amount, transaction_date, transaction_type)
+                        INSERT INTO \"transaction\" (label, amount, transaction_date, transaction_type)
                         VALUES(?, ?, ?, ?)
                     """;
                     PreparedStatement preparedStatement = connection.prepareStatement(query);
                     preparedStatement.setString(1, transaction.getLabel());
                     preparedStatement.setBigDecimal(2, transaction.getAmount());
                     preparedStatement.setObject(3, transaction.getTransactionDate());
-                    preparedStatement.setObject(4, transaction.getTransactionsType());
+                    preparedStatement.setObject(4, transaction.getTransactionType());
 
                     preparedStatement.close();
                 } else {
-                  UpdateById(transaction.getId(), transaction );
+                  update(transaction);
                 }
                 return toSave;
             }
@@ -101,18 +125,18 @@ public class TransactionDAO {
         try {
             if (findById(toSave.getId()) == null) {
                 String query = """
-                        INSERT INTO transaction(label, amount, transaction_date, transaction_type)
+                        INSERT INTO \"transaction\" (label, amount, transaction_date, transaction_type)
                         VALUES(?, ?, ?, ?)
                     """;
                 PreparedStatement preparedStatement = connection.prepareStatement(query);
                 preparedStatement.setString(1, toSave.getLabel());
                 preparedStatement.setBigDecimal(2, toSave.getAmount());
                 preparedStatement.setObject(3, toSave.getTransactionDate());
-                preparedStatement.setObject(4, toSave.getTransactionsType());
+                preparedStatement.setObject(4, toSave.getTransactionType());
                 preparedStatement.close();
                 return toSave;
             } else {
-                // update it
+                update(toSave);
             }
         } catch (SQLException exception) {
             System.out.println("Error occurred while saving the transaction :\n"
@@ -121,38 +145,19 @@ public class TransactionDAO {
         }
         return null;
     }
-    public boolean UpdateById (int id, Transaction transactionUpdated) {
+    public boolean update(Transaction transactionUpdated) {
         try {
             String query = """
-            UPDATE account
-            SET label = ?, amount = ?, transaction_date = ?
-            WHERE id = ?
-        """;
+                UPDATE \"tansaction\"
+                SET label = ?, amount = ?, transaction_date = ?, transaction_type = ?
+                WHERE id = ?
+            """;
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setString(1, transactionUpdated.getLabel());
             preparedStatement.setBigDecimal(2, transactionUpdated.getAmount());
             preparedStatement.setTimestamp(3, Timestamp.valueOf(transactionUpdated.getTransactionDate()));
-            preparedStatement.setInt(4, id);
-
-            int rowsUpdated = preparedStatement.executeUpdate();
-            preparedStatement.close();
-
-            return rowsUpdated > 0;
-        } catch (SQLException exception) {
-            System.out.println("Error occurred while updating account :\n" + exception.getMessage());
-            return false;
-        }
-    }
-    public boolean UpdateAmountById (int id, BigDecimal amount) {
-        try {
-            String query = """
-            UPDATE account
-            SET amount = ?
-            WHERE id = ?
-        """;
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setBigDecimal(1, amount);
-            preparedStatement.setInt(2, id);
+            preparedStatement.setObject(4, transactionUpdated.getTransactionType());
+            preparedStatement.setInt(5, transactionUpdated.getId());
 
             int rowsUpdated = preparedStatement.executeUpdate();
             preparedStatement.close();

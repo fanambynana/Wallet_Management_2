@@ -97,7 +97,7 @@ public class CurrencyDAO {
                     preparedStatement.setString(2, currency.getCode());
                     preparedStatement.close();
                 } else {
-                    // update it
+                    update(currency);
                 }
                 return toSave;
             }
@@ -121,7 +121,7 @@ public class CurrencyDAO {
                 preparedStatement.setString(2, toSave.getCode());
                 preparedStatement.close();
             } else {
-                UpdateById(toSave.getId(), toSave);
+                update(toSave);
             }
             return toSave;
         } catch (SQLException exception) {
@@ -131,24 +131,25 @@ public class CurrencyDAO {
         }
         return null;
     }
-    public boolean UpdateById (int id, Currency currencyUpdated) {
+    public boolean update (Currency currencyUpdated) {
         try {
             String query = """
-            UPDATE account
-            SET name = ?, code = ?, 
+            UPDATE currency
+            SET name = ?, code = ?
             WHERE id = ?
         """;
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setString(1, currencyUpdated.getName());
             preparedStatement.setString(2, currencyUpdated.getCode());
-            preparedStatement.setInt(3, id);
+            preparedStatement.setInt(3, currencyUpdated.getId());
 
             int rowsUpdated = preparedStatement.executeUpdate();
             preparedStatement.close();
 
             return rowsUpdated > 0;
         } catch (SQLException exception) {
-            System.out.println("Error occurred while updating account :\n" + exception.getMessage());
+            System.out.println("Error occurred while updating currency :\n"
+                    + exception.getMessage());
             return false;
         }
     }

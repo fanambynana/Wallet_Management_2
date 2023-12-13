@@ -6,6 +6,7 @@ import management.wallet.model.AccountName;
 import management.wallet.model.AccountType;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,9 +58,8 @@ public class AccountDAO {
                     preparedStatement.setInt(4, account.getId());
                     preparedStatement.setObject(5, account.getAccountType());
                     preparedStatement.close();
-                }
-                    else {
-                    UpdateById(account.getId(), account);
+                } else {
+                    update(account);
                 }
             }
             return toSave;
@@ -70,7 +70,31 @@ public class AccountDAO {
         }
         return null;
     }
-
+    public Account save(Account toSave) {
+        try {
+            if (findById(toSave.getId()) == null) {
+                String query = """
+                        INSERT INTO account(account_name, balance_amount, balance_update_date_time, currency_id, account_type)
+                        VALUES(?, ?, ?, ?, ?)
+                    """;
+                PreparedStatement preparedStatement = connection.prepareStatement(query);
+                preparedStatement.setObject(1, toSave.getAccountName());
+                preparedStatement.setBigDecimal(2, toSave.getBalanceAmount());
+                preparedStatement.setTimestamp(3, Timestamp.valueOf(toSave.getBalanceUpdateDateTime()));
+                preparedStatement.setInt(4, toSave.getId());
+                preparedStatement.setObject(5, toSave.getAccountType());
+                preparedStatement.close();
+            } else {
+                update(toSave);
+            }
+            return toSave;
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while saving the account :\n"
+                    + exception.getMessage()
+            );
+        }
+        return null;
+    }
     public Account findById(int id) {
         try {
             String query = " SELECT * FROM account WHERE id = ? ";
@@ -94,53 +118,50 @@ public class AccountDAO {
         }
         return null;
     }
-
-    public Account save(Account toSave) {
-        try {
-            if (findById(toSave.getId()) == null) {
-                String query = """
-                        INSERT INTO account(account_name, balance_amount, balance_update_date_time, currency_id, account_type)
-                        VALUES(?, ?, ?, ?, ?)
-                    """;
-                PreparedStatement preparedStatement = connection.prepareStatement(query);
-                preparedStatement.setObject(1, toSave.getAccountName());
-                preparedStatement.setBigDecimal(2, toSave.getBalanceAmount());
-                preparedStatement.setTimestamp(3, Timestamp.valueOf(toSave.getBalanceUpdateDateTime()));
-                preparedStatement.setInt(4, toSave.getId());
-                preparedStatement.setObject(5, toSave.getAccountType());
-                preparedStatement.close();
-            } else {
-                // update it
-            }
-            return toSave;
-        } catch (SQLException exception) {
-            System.out.println("Error occurred while saving the account :\n"
-                + exception.getMessage()
-            );
-        }
-        return null;
-    }
-    public boolean UpdateById (int id, Account accountUpdated) {
+    public boolean update (Account accountUpdated) {
         try {
             String query = """
             UPDATE account
-            SET account_name = ?, balance_amount = ?, balance_update_date_time = ?, currency_id = ?, account_type = ?
-            WHERE id = ?
-        """;
+                SET account_name = ?, balance_amount = ?,
+                balance_update_date_time = ?,
+                currency_id = ?, account_type = ?
+                WHERE id = ?
+            """;
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setObject(1, accountUpdated.getAccountName());
             preparedStatement.setBigDecimal(2, accountUpdated.getBalanceAmount());
             preparedStatement.setTimestamp(3, Timestamp.valueOf(accountUpdated.getBalanceUpdateDateTime()));
             preparedStatement.setInt(4, accountUpdated.getCurrencyId());
             preparedStatement.setObject(5, accountUpdated.getAccountType());
-            preparedStatement.setInt(6, id);
+            preparedStatement.setInt(6, accountUpdated.getId());
 
             int rowsUpdated = preparedStatement.executeUpdate();
             preparedStatement.close();
 
             return rowsUpdated > 0;
         } catch (SQLException exception) {
-            System.out.println("Error occurred while updating account :\n" + exception.getMessage());
+            System.out.println("Error occurred while updating the account :\n" + exception.getMessage());
+            return false;
+        }
+    }
+    public boolean updateAmountById (int id, BigDecimal amount) {
+        try {
+            String query = """
+                    UPDATE account
+                    SET amount = ?
+                    WHERE id = ?
+                """;
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setBigDecimal(1, amount);
+            preparedStatement.setInt(2, id);
+
+            int rowsUpdated = preparedStatement.executeUpdate();
+            preparedStatement.close();
+
+            return rowsUpdated > 0;
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while updating the account :\n"
+                    + exception.getMessage());
             return false;
         }
     }
