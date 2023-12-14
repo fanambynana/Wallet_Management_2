@@ -129,4 +129,35 @@ public class TransferHistoryDAO {
         }
         return amounts;
     }
+
+    public List<LocalDateTime> findByIntervalReturnTransferDateTime(LocalDateTime from, LocalDateTime to) {
+        List<LocalDateTime> datetimes = new ArrayList<>();
+        try {
+            String query = """
+                SELECT
+                th.datetime
+                FROM transfer_history th
+                INNER JOIN transaction t
+                ON th.credit_transaction_id = t.id
+                INNER JOIN "account" a
+                ON transaction.account_id = a.id
+                WHERE th.date_time BETWEEN ? AND ?
+            """;
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setObject(1, from);
+            statement.setObject(1, to);
+            ResultSet resultSet  = statement.getResultSet();
+
+            while (resultSet.next()) {
+                datetimes.add((LocalDateTime) resultSet.getObject("datetime"));
+            }
+            statement.close();
+            resultSet.close();
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while finding transfer histories :\n"
+                    + exception.getMessage()
+            );
+        }
+        return datetimes;
+    }
 }

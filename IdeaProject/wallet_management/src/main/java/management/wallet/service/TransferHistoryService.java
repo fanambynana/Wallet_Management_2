@@ -21,4 +21,7 @@ public class TransferHistoryService {
     public List<BigDecimal> findByIntervalReturnTransferAmount(LocalDateTime from, LocalDateTime to) {
         return transferHistoryDAO.findByIntervalReturnTransferAmount(from, to);
     }
+    public List<LocalDateTime> findByIntervalReturnTransferDateTime(LocalDateTime from, LocalDateTime to) {
+        return transferHistoryDAO.findByIntervalReturnTransferDateTime(from, to);
+    }
 }
