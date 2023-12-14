@@ -2,6 +2,8 @@ package management.wallet.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import management.wallet.model.Enum.AccountName;
+import management.wallet.model.Enum.AccountType;
 
 import java.util.List;
 
