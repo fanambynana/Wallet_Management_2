@@ -9,5 +9,6 @@ import java.util.List;
 @Data
 public class TransactionCategories {
     private int id;
-    private List<Transaction> transactionList;
+    private String category_name;
+    private Boolean Is_expense;
 }
