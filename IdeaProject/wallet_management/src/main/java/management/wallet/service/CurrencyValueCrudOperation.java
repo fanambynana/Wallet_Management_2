@@ -4,6 +4,8 @@ import management.wallet.DAO.CurrencyValueDAO;
 import management.wallet.model.CurrencyValue;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -33,5 +35,12 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
     @Override
     public boolean update(CurrencyValue toUpdate) {
         return false;
+    }
+
+    public List<CurrencyValue> findAllByDate(LocalDate date) {
+        return currencyValueDAO.findAllByDate(date);
+    }
+    public BigDecimal findAvgByDate(LocalDate date) {
+        return currencyValueDAO.findAvgByDate(date);
     }
 }
