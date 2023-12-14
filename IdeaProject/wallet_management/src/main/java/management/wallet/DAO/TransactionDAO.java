@@ -1,10 +1,9 @@
 package management.wallet.DAO;
 
 import management.wallet.dbConnection.DbConnect;
-import management.wallet.model.Transaction;
 import management.wallet.model.TransactionCategories;
 import management.wallet.model.TransactionSave;
-import management.wallet.model.TransactionType;
+import management.wallet.model.Enum.TransactionType;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;

@@ -2,6 +2,7 @@ package management.wallet.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import management.wallet.model.Enum.TransactionType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
