@@ -67,6 +67,33 @@ public class BalanceHistoryDAO {
         }
         return null;
     }
+    public BalanceHistory findByIntervalDateTime(LocalDateTime from, LocalDateTime to) {
+        try {
+            String query = """
+                SELECT * FROM balance_history WHERE datetime BETWEEN ? AND ?
+            """;
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setObject(1, from);
+            statement.setObject(1, to);
+            ResultSet resultSet  = statement.getResultSet();
+
+            if (resultSet.next()) {
+                return new BalanceHistory(
+                        resultSet.getInt("id"),
+                        resultSet.getInt("balance_id"),
+                        resultSet.getInt("account_id"),
+                        (LocalDateTime) resultSet.getObject("datetime")
+                );
+            }
+            statement.close();
+            resultSet.close();
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while finding the balance history :\n"
+                    + exception.getMessage()
+            );
+        }
+        return null;
+    }
 
     public List<BalanceHistory> saveAll(List<BalanceHistory> toSave) {
         try {

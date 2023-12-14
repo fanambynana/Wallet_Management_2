@@ -2,36 +2,37 @@ package management.wallet.service;
 
 import management.wallet.model.Transaction;
 import management.wallet.DAO.TransactionDAO;
+import management.wallet.model.TransactionSave;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public class TransactionCrudOperation implements CrudOperation<Transaction>{
+public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
     TransactionDAO repository;
 
     @Override
-    public List<Transaction> findAll() {
+    public List<TransactionSave> findAll() {
         return repository.findAll();
     }
 
     @Override
-    public Transaction findById(int id) {
+    public TransactionSave findById(int id) {
         return repository.findById(id);
     }
 
     @Override
-    public List<Transaction> saveAll(List<Transaction> toSave) {
+    public List<TransactionSave> saveAll(List<TransactionSave> toSave) {
         return repository.saveAll(toSave);
     }
 
     @Override
-    public Transaction save(Transaction toSave) {
+    public TransactionSave save(TransactionSave toSave) {
         return repository.save(toSave);
     }
 
     @Override
-    public boolean update(Transaction toUpdate) {
+    public boolean update(TransactionSave toUpdate) {
         return repository.update(toUpdate);
     }
 }
