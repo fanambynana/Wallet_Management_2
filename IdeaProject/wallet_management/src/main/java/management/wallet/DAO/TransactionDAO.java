@@ -2,6 +2,7 @@ package management.wallet.DAO;
 
 import management.wallet.dbConnection.DbConnect;
 import management.wallet.model.Transaction;
+import management.wallet.model.TransactionCategories;
 import management.wallet.model.TransactionType;
 import org.springframework.stereotype.Repository;
 
@@ -28,7 +29,8 @@ public class TransactionDAO {
                         resultSet.getString("label"),
                         resultSet.getBigDecimal("amount"),
                         (LocalDateTime) resultSet.getObject("transaction_date"),
-                        (TransactionType) resultSet.getObject("transaction_type")
+                        (TransactionType) resultSet.getObject("transaction_type"),
+                        (TransactionCategories) resultSet.getObject("category")
                 ));
             }
             statement.close();
@@ -53,7 +55,8 @@ public class TransactionDAO {
                         resultSet.getString("label"),
                         resultSet.getBigDecimal("amount"),
                         (LocalDateTime) resultSet.getObject("transaction_date"),
-                        (TransactionType) resultSet.getObject("transaction_type")
+                        (TransactionType) resultSet.getObject("transaction_type"),
+                        (TransactionCategories) resultSet.getObject("category")
                 );
             }
             statement.close();
@@ -79,7 +82,8 @@ public class TransactionDAO {
                         resultSet.getString("label"),
                         resultSet.getBigDecimal("amount"),
                         (LocalDateTime) resultSet.getObject("transaction_date"),
-                        (TransactionType) resultSet.getObject("transaction_type")
+                        (TransactionType) resultSet.getObject("transaction_type"),
+                        (TransactionCategories) resultSet.getObject("category")
                 ));
             }
             statement.close();
@@ -99,13 +103,14 @@ public class TransactionDAO {
                 if (findById(transaction.getId()) == null) {
                     String query = """
                         INSERT INTO \"transaction\" (label, amount, transaction_date, transaction_type)
-                        VALUES(?, ?, ?, ?)
+                        VALUES(?, ?, ?, ?, ?)
                     """;
                     PreparedStatement preparedStatement = connection.prepareStatement(query);
                     preparedStatement.setString(1, transaction.getLabel());
                     preparedStatement.setBigDecimal(2, transaction.getAmount());
                     preparedStatement.setObject(3, transaction.getTransactionDate());
                     preparedStatement.setObject(4, transaction.getTransactionType());
+                    preparedStatement.setObject(5, transaction.getCategory());
 
                     preparedStatement.close();
                 } else {
@@ -125,14 +130,15 @@ public class TransactionDAO {
         try {
             if (findById(toSave.getId()) == null) {
                 String query = """
-                        INSERT INTO \"transaction\" (label, amount, transaction_date, transaction_type)
-                        VALUES(?, ?, ?, ?)
+                        INSERT INTO \"transaction\" (label, amount, transaction_date, transaction_type, category)
+                        VALUES(?, ?, ?, ?, ?)
                     """;
                 PreparedStatement preparedStatement = connection.prepareStatement(query);
                 preparedStatement.setString(1, toSave.getLabel());
                 preparedStatement.setBigDecimal(2, toSave.getAmount());
                 preparedStatement.setObject(3, toSave.getTransactionDate());
                 preparedStatement.setObject(4, toSave.getTransactionType());
+                preparedStatement.setObject(5, toSave.getCategory());
                 preparedStatement.close();
                 return toSave;
             } else {
@@ -149,7 +155,7 @@ public class TransactionDAO {
         try {
             String query = """
                 UPDATE \"tansaction\"
-                SET label = ?, amount = ?, transaction_date = ?, transaction_type = ?
+                SET label = ?, amount = ?, transaction_date = ?, transaction_type = ?, category = ?
                 WHERE id = ?
             """;
             PreparedStatement preparedStatement = connection.prepareStatement(query);
@@ -157,7 +163,8 @@ public class TransactionDAO {
             preparedStatement.setBigDecimal(2, transactionUpdated.getAmount());
             preparedStatement.setTimestamp(3, Timestamp.valueOf(transactionUpdated.getTransactionDate()));
             preparedStatement.setObject(4, transactionUpdated.getTransactionType());
-            preparedStatement.setInt(5, transactionUpdated.getId());
+            preparedStatement.setObject(5, transactionUpdated.getCategory());
+            preparedStatement.setInt(6, transactionUpdated.getId());
 
             int rowsUpdated = preparedStatement.executeUpdate();
             preparedStatement.close();
