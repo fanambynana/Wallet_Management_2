@@ -2,7 +2,10 @@ package management.wallet.service;
 
 import management.wallet.DAO.AccountDAO;
 import management.wallet.DAO.BalanceDAO;
+import management.wallet.DAO.CurrencyDAO;
+import management.wallet.model.AccountSave;
 import management.wallet.model.Balance;
+import management.wallet.model.Currency;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -21,7 +24,7 @@ public class BalanceService {
                 accountDAO.findById(accountId).getBalanceId()
         );
     }
-    public List<Balance> findBalanceByInterval(LocalDateTime from, LocalDateTime to) {
-        return balanceDAO.findByIntervalDateTime(from, to);
+    public List<Balance> findByInterval(LocalDateTime from, LocalDateTime to) {
+        return balanceDAO.findByInterval(from, to);
     }
 }

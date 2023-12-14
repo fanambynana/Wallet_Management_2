@@ -2,6 +2,7 @@ package management.wallet.DAO;
 
 import management.wallet.dbConnection.DbConnect;
 import management.wallet.model.Transaction;
+import management.wallet.model.TransactionSave;
 import management.wallet.model.TransactionType;
 import org.springframework.stereotype.Repository;
 
@@ -15,20 +16,21 @@ public class TransactionDAO {
     DbConnect dbConnect = new DbConnect();
     Connection connection = dbConnect.createConnection();
 
-    public List<Transaction> findAll() {
-        List<Transaction> transactions = new ArrayList<>();
+    public List<TransactionSave> findAll() {
+        List<TransactionSave> transactions = new ArrayList<>();
         try {
             String query = "SELECT * FROM transaction";
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
 
             while (resultSet.next()) {
-                transactions.add(new Transaction(
+                transactions.add(new TransactionSave(
                         resultSet.getInt("id"),
                         resultSet.getString("label"),
                         resultSet.getBigDecimal("amount"),
                         (LocalDateTime) resultSet.getObject("transaction_date"),
-                        (TransactionType) resultSet.getObject("transaction_type")
+                        (TransactionType) resultSet.getObject("transaction_type"),
+                        resultSet.getInt("account_id")
                 ));
             }
             statement.close();
@@ -40,7 +42,7 @@ public class TransactionDAO {
         }
         return transactions;
     }
-    public Transaction findById(int id) {
+    public TransactionSave findById(int id) {
         try {
             String query = "SELECT * FROM \"transaction\" WHERE id = ? ";
             PreparedStatement statement = connection.prepareStatement(query);
@@ -48,12 +50,13 @@ public class TransactionDAO {
             ResultSet resultSet = statement.getResultSet();
 
             if (resultSet.next()) {
-                return new Transaction(
+                return new TransactionSave(
                         resultSet.getInt("id"),
                         resultSet.getString("label"),
                         resultSet.getBigDecimal("amount"),
                         (LocalDateTime) resultSet.getObject("transaction_date"),
-                        (TransactionType) resultSet.getObject("transaction_type")
+                        (TransactionType) resultSet.getObject("transaction_type"),
+                        resultSet.getInt("account_id")
                 );
             }
             statement.close();
@@ -65,8 +68,8 @@ public class TransactionDAO {
         }
         return null;
     }
-    public List<Transaction> findByAccountId(int id) {
-        List<Transaction> transactions = new ArrayList<>();
+    public List<TransactionSave> findByAccountId(int id) {
+        List<TransactionSave> transactions = new ArrayList<>();
         try {
             String query = "SELECT * FROM \"transaction\" WHERE account_id = ? ";
             PreparedStatement statement = connection.prepareStatement(query);
@@ -74,12 +77,13 @@ public class TransactionDAO {
             ResultSet resultSet = statement.getResultSet();
 
             while (resultSet.next()) {
-                transactions.add(new Transaction(
+                transactions.add(new TransactionSave(
                         resultSet.getInt("id"),
                         resultSet.getString("label"),
                         resultSet.getBigDecimal("amount"),
                         (LocalDateTime) resultSet.getObject("transaction_date"),
-                        (TransactionType) resultSet.getObject("transaction_type")
+                        (TransactionType) resultSet.getObject("transaction_type"),
+                        resultSet.getInt("account_id")
                 ));
             }
             statement.close();
@@ -92,20 +96,20 @@ public class TransactionDAO {
         return transactions;
     }
 
-    public List<Transaction> saveAll(List<Transaction> toSave) {
-        List<Transaction> existingTransactions = new ArrayList<>();
+    public List<TransactionSave> saveAll(List<TransactionSave> toSave) {
         try {
-            for (Transaction transaction : toSave) {
+            for (TransactionSave transaction : toSave) {
                 if (findById(transaction.getId()) == null) {
                     String query = """
-                        INSERT INTO \"transaction\" (label, amount, transaction_date, transaction_type)
-                        VALUES(?, ?, ?, ?)
+                        INSERT INTO \"transaction\" (label, amount, transaction_date, transaction_type, account_id)
+                        VALUES(?, ?, ?, ?, ?)
                     """;
                     PreparedStatement preparedStatement = connection.prepareStatement(query);
                     preparedStatement.setString(1, transaction.getLabel());
                     preparedStatement.setBigDecimal(2, transaction.getAmount());
                     preparedStatement.setObject(3, transaction.getTransactionDate());
                     preparedStatement.setObject(4, transaction.getTransactionType());
+                    preparedStatement.setInt(5, transaction.getAccountId());
 
                     preparedStatement.close();
                 } else {
@@ -121,18 +125,19 @@ public class TransactionDAO {
         return null;
     }
 
-    public Transaction save(Transaction toSave) {
+    public TransactionSave save(TransactionSave toSave) {
         try {
             if (findById(toSave.getId()) == null) {
                 String query = """
-                        INSERT INTO \"transaction\" (label, amount, transaction_date, transaction_type)
-                        VALUES(?, ?, ?, ?)
+                        INSERT INTO \"transaction\" (label, amount, transaction_date, transaction_type, account_id)
+                        VALUES(?, ?, ?, ?, ?)
                     """;
                 PreparedStatement preparedStatement = connection.prepareStatement(query);
                 preparedStatement.setString(1, toSave.getLabel());
                 preparedStatement.setBigDecimal(2, toSave.getAmount());
                 preparedStatement.setObject(3, toSave.getTransactionDate());
                 preparedStatement.setObject(4, toSave.getTransactionType());
+                preparedStatement.setInt(5, toSave.getAccountId());
                 preparedStatement.close();
                 return toSave;
             } else {
@@ -145,11 +150,11 @@ public class TransactionDAO {
         }
         return null;
     }
-    public boolean update(Transaction transactionUpdated) {
+    public boolean update(TransactionSave transactionUpdated) {
         try {
             String query = """
                 UPDATE \"tansaction\"
-                SET label = ?, amount = ?, transaction_date = ?, transaction_type = ?
+                SET label = ?, amount = ?, transaction_date = ?, transaction_type = ?, account_id
                 WHERE id = ?
             """;
             PreparedStatement preparedStatement = connection.prepareStatement(query);
@@ -157,7 +162,8 @@ public class TransactionDAO {
             preparedStatement.setBigDecimal(2, transactionUpdated.getAmount());
             preparedStatement.setTimestamp(3, Timestamp.valueOf(transactionUpdated.getTransactionDate()));
             preparedStatement.setObject(4, transactionUpdated.getTransactionType());
-            preparedStatement.setInt(5, transactionUpdated.getId());
+            preparedStatement.setInt(5, transactionUpdated.getAccountId());
+            preparedStatement.setInt(6, transactionUpdated.getId());
 
             int rowsUpdated = preparedStatement.executeUpdate();
             preparedStatement.close();
