@@ -43,4 +43,10 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
     public BigDecimal findAvgByDate(LocalDate date) {
         return currencyValueDAO.findAvgByDate(date);
     }
+    public BigDecimal findMinByDate(LocalDate date) {
+        return currencyValueDAO.findMinByDate(date);
+    }
+    public BigDecimal findMaxByDate(LocalDate date) {
+        return currencyValueDAO.findMaxByDate(date);
+    }
 }
