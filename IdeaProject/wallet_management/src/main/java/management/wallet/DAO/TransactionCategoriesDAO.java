@@ -72,7 +72,7 @@ public class TransactionCategoriesDAO {
                     preparedStatement.setObject(2, transactionCategories.getSpecific_Categories());
 
                 } else {
-//                    update(toSave);
+                      Update(transactionCategories);
                 }
             }
 
@@ -82,5 +82,24 @@ public class TransactionCategoriesDAO {
 
         return null;
     }
+    public boolean Update(TransactionCategories transactionCategory) {
+        String query = "UPDATE transaction_categories SET category_name = ?, specific_categories = ? WHERE id = ?";
+        try (
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setString(1, transactionCategory.getCategory_name());
+            preparedStatement.setObject(2, transactionCategory.getSpecific_Categories());
+            preparedStatement.setInt(3, transactionCategory.getId());
+
+            int rowsUpdated = preparedStatement.executeUpdate();
+            return rowsUpdated > 0;
+
+        } catch (SQLException e) {
+            System.out.println("Error occurred while updating the transactionCategories :\n"
+                    + e.getMessage());
+            return false;
+        }
+    }
+
 
 }
