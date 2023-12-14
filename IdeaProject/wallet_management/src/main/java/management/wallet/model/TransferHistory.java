@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 public class TransferHistory {
     private int id;
-    private int debit_transaction_id;
-    private int credit_transaction_id;
+    private int debitTransactionId;
+    private int creditTransactionId;
     private LocalDateTime dateTime;
 }

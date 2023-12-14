@@ -5,6 +5,7 @@ import management.wallet.model.Balance;
 import management.wallet.model.Currency;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -88,7 +89,7 @@ public class BalanceDAO {
         }
         return null;
     }
-    public List<Balance> findByIntervalDateTime(LocalDateTime from,LocalDateTime to) {
+    public List<Balance> findByInterval(LocalDateTime from,LocalDateTime to) {
         List<Balance> balances = new ArrayList<>();
         try {
             String query = """
@@ -190,4 +191,42 @@ public class BalanceDAO {
             return false;
         }
     }
+
+    /*
+    public Balance findCurrentBalanceWithExchange(int accountId) {
+        try {
+            String query = """
+                SELECT
+                ()
+                b.id,
+                b.amount,
+                b.update_datetime
+                FROM balance_history bh
+                INNER JOIN balance b
+                ON bh.balance_id = b.id
+                INNER JOIN 
+                WHERE b.update_date_time BETWEEN ? AND ?
+            """;
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setObject(1, from);
+            statement.setObject(2, to);
+            ResultSet resultSet  = statement.getResultSet();
+
+            while (resultSet.next()) {
+                balances.add(new Balance(
+                        resultSet.getInt("id"),
+                        resultSet.getBigDecimal("amount"),
+                        (LocalDateTime) resultSet.getObject("update_datetime")
+                ));
+            }
+            statement.close();
+            resultSet.close();
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while finding balances :\n"
+                    + exception.getMessage()
+            );
+        }
+    }
+    */
+
 }

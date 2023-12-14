@@ -2,6 +2,7 @@ package management.wallet.service;
 
 import management.wallet.DAO.TransferHistoryDAO;
 import management.wallet.model.Account;
+import management.wallet.model.AccountSave;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -12,10 +13,10 @@ import java.util.List;
 public class TransferHistoryService {
     TransferHistoryDAO transferHistoryDAO;
 
-    public List<Account> findByIntervalReturnDebitAccount(LocalDateTime from, LocalDateTime to) {
+    public List<AccountSave> findByIntervalReturnDebitAccount(LocalDateTime from, LocalDateTime to) {
         return transferHistoryDAO.findByIntervalReturnDebitAccount(from, to);
     }
-    public  List<Account> findByIntervalReturnCreditAccount(LocalDateTime from, LocalDateTime to) {
+    public  List<AccountSave> findByIntervalReturnCreditAccount(LocalDateTime from, LocalDateTime to) {
         return transferHistoryDAO.findByIntervalReturnCreditAccount(from, to);
     }
     public List<BigDecimal> findByIntervalReturnTransferAmount(LocalDateTime from, LocalDateTime to) {
