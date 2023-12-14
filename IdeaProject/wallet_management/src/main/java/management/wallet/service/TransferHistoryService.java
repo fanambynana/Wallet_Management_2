@@ -4,6 +4,7 @@ import management.wallet.DAO.TransferHistoryDAO;
 import management.wallet.model.Account;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -16,5 +17,8 @@ public class TransferHistoryService {
     }
     public  List<Account> findByIntervalReturnCreditAccount(LocalDateTime from, LocalDateTime to) {
         return transferHistoryDAO.findByIntervalReturnCreditAccount(from, to);
+    }
+    public List<BigDecimal> findByIntervalReturnTransferAmount(LocalDateTime from, LocalDateTime to) {
+        return transferHistoryDAO.findByIntervalReturnTransferAmount(from, to);
     }
 }

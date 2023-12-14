@@ -4,6 +4,7 @@ import management.wallet.dbConnection.DbConnect;
 import management.wallet.model.*;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -96,5 +97,36 @@ public class TransferHistoryDAO {
             );
         }
         return accounts;
+    }
+
+    public List<BigDecimal> findByIntervalReturnTransferAmount(LocalDateTime from, LocalDateTime to) {
+        List<BigDecimal> amounts = new ArrayList<>();
+        try {
+            String query = """
+                SELECT
+                t.amount
+                FROM transfer_history
+                INNER JOIN transaction t
+                ON transfer_history.credit_transaction_id = t.id
+                INNER JOIN "account" a
+                ON transaction.account_id = a.id
+                WHERE transfer_history.date_time BETWEEN ? AND ?
+            """;
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setObject(1, from);
+            statement.setObject(1, to);
+            ResultSet resultSet  = statement.getResultSet();
+
+            while (resultSet.next()) {
+                amounts.add(resultSet.getBigDecimal("amount"));
+            }
+            statement.close();
+            resultSet.close();
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while finding transfer histories :\n"
+                    + exception.getMessage()
+            );
+        }
+        return amounts;
     }
 }
