@@ -88,6 +88,40 @@ public class BalanceDAO {
         }
         return null;
     }
+    public List<Balance> findByIntervalDateTime(LocalDateTime from,LocalDateTime to) {
+        List<Balance> balances = new ArrayList<>();
+        try {
+            String query = """
+                SELECT
+                balance.id,
+                balance.amount,
+                balance.update_datetime
+                FROM balance_history
+                INNER JOIN balance
+                ON balance_history.balance_id = balance.id
+                WHERE balance.update_date_time BETWEEN ? AND ?
+            """;
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setObject(1, from);
+            statement.setObject(2, to);
+            ResultSet resultSet  = statement.getResultSet();
+
+            while (resultSet.next()) {
+                balances.add(new Balance(
+                        resultSet.getInt("id"),
+                        resultSet.getBigDecimal("amount"),
+                        (LocalDateTime) resultSet.getObject("update_datetime")
+                ));
+            }
+            statement.close();
+            resultSet.close();
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while finding balances :\n"
+                    + exception.getMessage()
+            );
+        }
+        return balances;
+    }
     public List<Balance> saveAll(List<Balance> toSave) {
         try {
             for (Balance balance : toSave) {

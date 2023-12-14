@@ -6,6 +6,7 @@ import management.wallet.model.Balance;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class BalanceService {
@@ -19,5 +20,8 @@ public class BalanceService {
         return balanceDAO.findById(
                 accountDAO.findById(accountId).getBalanceId()
         );
+    }
+    public List<Balance> findBalanceByInterval(LocalDateTime from, LocalDateTime to) {
+        return balanceDAO.findByIntervalDateTime(from, to);
     }
 }
