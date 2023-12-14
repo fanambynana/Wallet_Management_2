@@ -8,4 +8,5 @@ CREATE TABLE IF NOT EXISTS "transaction"(
     transaction_type TRANSACTION_TYPE NOT NULL,
     categoryId INT REFERENCES transaction_categories(id),   --   this column specify the transaction category
     account_id INT NOT NULL REFERENCES account(id)
+    -- account_id INT NOT NULL REFERENCES account(id)
 );

@@ -63,7 +63,7 @@ public class CurrencyDAO {
 
     public Currency findByCode(String code) {
         try {
-            String query = "SELECT * FROM currency WHERE code = ? ";
+            String query = "SELECT * FROM currency WHERE code ILIKE ?";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, code);
             ResultSet resultSet  = statement.getResultSet();

@@ -13,6 +13,7 @@ public class TransactionSave {
     private String label;
     private BigDecimal amount;
     private LocalDateTime transactionDate;
-    private TransactionType transactionsType;
+    private TransactionType transactionType;
+    private TransactionCategories category;
     private int accountId;
 }
