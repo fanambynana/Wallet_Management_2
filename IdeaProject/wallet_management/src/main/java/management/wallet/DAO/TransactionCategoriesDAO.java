@@ -25,7 +25,7 @@ public class TransactionCategoriesDAO {
                 transactionCategories.add(new TransactionCategories(
                         resultSet.getInt("id"),
                         resultSet.getString("category_name"),
-                        (CategoryGroup) resultSet.getObject("Specific_Categories")
+                        (CategoryGroup) resultSet.getObject("category_group")
                 ));
             }
             statement.close();
@@ -48,11 +48,14 @@ public class TransactionCategoriesDAO {
                 return  new TransactionCategories(
                         resultSet.getInt("id"),
                         resultSet.getString("category_name"),
-                        (CategoryGroup) resultSet.getObject("specific_categories")
+                        (CategoryGroup) resultSet.getObject("category_group")
                 );
             }
 
         } catch (SQLException e) {
+            System.out.println("Error occurred while finding the transaction category :\n"
+                    + e.getMessage()
+            );
             throw new RuntimeException(e);
         }
         return null;
@@ -64,15 +67,15 @@ public class TransactionCategoriesDAO {
             for (TransactionCategories transactionCategories : toSave){
                 if(findById(transactionCategories.getId()) == null ) {
                     String query = """
-                    INSERT INTO transaction_categories (category_name, specific_categories) 
+                    INSERT INTO transaction_categories (category_name, category_group) 
                     VALUES (?, ?)
                     """;
                     PreparedStatement preparedStatement = connection.prepareStatement(query);
-                    preparedStatement.setString(1, transactionCategories.getCategory_name());
-                    preparedStatement.setObject(2, transactionCategories.getSpecific_Categories());
+                    preparedStatement.setString(1, transactionCategories.getCategoryName());
+                    preparedStatement.setObject(2, transactionCategories.getCategoryGroup());
 
                 } else {
-                      Update(transactionCategories);
+                      update(transactionCategories);
                 }
             }
 
@@ -82,20 +85,24 @@ public class TransactionCategoriesDAO {
 
         return null;
     }
-    public boolean Update(TransactionCategories transactionCategory) {
-        String query = "UPDATE transaction_categories SET category_name = ?, specific_categories = ? WHERE id = ?";
+    public boolean update(TransactionCategories transactionCategory) {
+        String query = """
+            UPDATE transaction_categories
+            SET category_name = ?, category_group = ?
+            WHERE id = ?
+        """;
         try (
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
-            preparedStatement.setString(1, transactionCategory.getCategory_name());
-            preparedStatement.setObject(2, transactionCategory.getSpecific_Categories());
+            preparedStatement.setString(1, transactionCategory.getCategoryName());
+            preparedStatement.setObject(2, transactionCategory.getCategoryGroup());
             preparedStatement.setInt(3, transactionCategory.getId());
 
             int rowsUpdated = preparedStatement.executeUpdate();
             return rowsUpdated > 0;
 
         } catch (SQLException e) {
-            System.out.println("Error occurred while updating the transactionCategories :\n"
+            System.out.println("Error occurred while updating the transaction category :\n"
                     + e.getMessage());
             return false;
         }
