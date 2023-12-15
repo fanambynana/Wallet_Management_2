@@ -62,28 +62,50 @@ public class TransactionCategoriesDAO {
     }
 
     public List<TransactionCategories> saveAll(List<TransactionCategories> toSave){
-
         try {
             for (TransactionCategories transactionCategories : toSave){
-                if(findById(transactionCategories.getId()) == null ) {
+                if (findById(transactionCategories.getId()) == null ) {
                     String query = """
-                    INSERT INTO transaction_categories (category_name, category_group) 
-                    VALUES (?, ?)
+                        INSERT INTO transaction_categories (category_name, category_group) 
+                        VALUES (?, ?)
                     """;
                     PreparedStatement preparedStatement = connection.prepareStatement(query);
                     preparedStatement.setString(1, transactionCategories.getCategoryName());
                     preparedStatement.setObject(2, transactionCategories.getCategoryGroup());
-
                 } else {
                       update(transactionCategories);
                 }
+                return toSave;
             }
 
         } catch (Exception e) {
+            System.out.println("Error occurred while saving all transaction categories :\n"
+                    + e.getMessage()
+            );
             throw new RuntimeException(e);
         }
-
         return null;
+    }
+    public TransactionCategories save(TransactionCategories toSave) {
+        try {
+            if (findById(toSave.getId()) == null ) {
+                String query = """
+                        INSERT INTO transaction_categories (category_name, category_group) 
+                        VALUES (?, ?)
+                    """;
+                PreparedStatement preparedStatement = connection.prepareStatement(query);
+                preparedStatement.setString(1, toSave.getCategoryName());
+                preparedStatement.setObject(2, toSave.getCategoryGroup());
+            } else {
+                update(toSave);
+            }
+            return toSave;
+        } catch (Exception e) {
+            System.out.println("Error occurred while saving the transaction category :\n"
+                    + e.getMessage()
+            );
+            throw new RuntimeException(e);
+        }
     }
     public boolean update(TransactionCategories transactionCategory) {
         String query = """
@@ -107,6 +129,4 @@ public class TransactionCategoriesDAO {
             return false;
         }
     }
-
-
 }
