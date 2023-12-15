@@ -2,13 +2,13 @@ package management.wallet.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import management.wallet.model.Enum.SpecificCategories;
+import management.wallet.model.Enum.CategoryGroup;
 
 
 @AllArgsConstructor
 @Data
 public class TransactionCategories {
     private int id;
-    private String category_name;
-    private SpecificCategories specific_Categories;
+    private String categoryName;
+    private CategoryGroup categoryGroup;
 }

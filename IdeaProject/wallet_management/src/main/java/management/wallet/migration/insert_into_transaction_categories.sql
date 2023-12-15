@@ -1,15 +1,15 @@
 DO $$
     BEGIN
-        IF NOT EXISTS (SELECT 1 FROM transaction_categories WHERE category_name = 'Prêt') THEN
-            INSERT INTO transaction_categories (category_name, category_categorie) VALUES ('Prêt', 'other');
+        IF NOT EXISTS (SELECT 1 FROM transaction_categories WHERE category_name = 'Loan') THEN
+            INSERT INTO transaction_categories (category_name, category_group) VALUES ('Loan', 'either');
         END IF;
 
-        IF NOT EXISTS (SELECT 1 FROM transaction_categories WHERE category_name = 'Téléphone et Multimédia') THEN
-            INSERT INTO transaction_categories (category_name, category_categorie) VALUES ('Téléphone et Multimédia', 'expense');
+        IF NOT EXISTS (SELECT 1 FROM transaction_categories WHERE category_name = 'Communication, PC') THEN
+            INSERT INTO transaction_categories (category_name, category_group) VALUES ('Communication, PC', 'expense');
         END IF;
 
-        IF NOT EXISTS(SELECT 1 FROM transaction_categories WHERE category_name = 'salaire') THEN
-        INSERT INTO transaction_categories (category_name, category_categorie )VALUES ('salaire', 'income');
+        IF NOT EXISTS(SELECT 1 FROM transaction_categories WHERE category_name = 'Salary') THEN
+        INSERT INTO transaction_categories (category_name, category_group )VALUES ('Salary', 'income');
         END IF;
 
     END $$;

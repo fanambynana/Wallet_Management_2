@@ -1,0 +1,13 @@
+Budgetbakers Transactions categories :
+- Food & Drinks
+- Shopping
+- Housing
+- Transportation
+- Vehicle
+- Life & Entertainment
+- Communication, PC
+- Financial expenses
+- Investments
+- Income
+- Others
+- Unknown

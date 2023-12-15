@@ -30,7 +30,7 @@ public class TransactionDAO {
                         resultSet.getBigDecimal("amount"),
                         (LocalDateTime) resultSet.getObject("transaction_date"),
                         (TransactionType) resultSet.getObject("transaction_type"),
-                        (TransactionCategories) resultSet.getObject("category"),
+                        resultSet.getInt("category_id"),
                         resultSet.getInt("account_id")
                 ));
             }
@@ -57,7 +57,7 @@ public class TransactionDAO {
                         resultSet.getBigDecimal("amount"),
                         (LocalDateTime) resultSet.getObject("transaction_date"),
                         (TransactionType) resultSet.getObject("transaction_type"),
-                        (TransactionCategories) resultSet.getObject("category"),
+                        resultSet.getInt("category_id"),
                         resultSet.getInt("account_id")
                 );
             }
@@ -85,7 +85,7 @@ public class TransactionDAO {
                         resultSet.getBigDecimal("amount"),
                         (LocalDateTime) resultSet.getObject("transaction_date"),
                         (TransactionType) resultSet.getObject("transaction_type"),
-                        (TransactionCategories) resultSet.getObject("category"),
+                        resultSet.getInt("category_id"),
                         resultSet.getInt("account_id")
                 ));
             }
@@ -104,7 +104,7 @@ public class TransactionDAO {
             for (TransactionSave transaction : toSave) {
                 if (findById(transaction.getId()) == null) {
                     String query = """
-                        INSERT INTO \"transaction\" (label, amount, transaction_date, transaction_type, category, account_id)
+                        INSERT INTO \"transaction\" (label, amount, transaction_date, transaction_type, category_id, account_id)
                         VALUES(?, ?, ?, ?, ?, ?)
                     """;
                     PreparedStatement preparedStatement = connection.prepareStatement(query);
@@ -112,7 +112,7 @@ public class TransactionDAO {
                     preparedStatement.setBigDecimal(2, transaction.getAmount());
                     preparedStatement.setObject(3, transaction.getTransactionDate());
                     preparedStatement.setObject(4, transaction.getTransactionType());
-                    preparedStatement.setObject(5, transaction.getCategory());
+                    preparedStatement.setObject(5, transaction.getTransactionCategoryId());
                     preparedStatement.setInt(6, transaction.getAccountId());
 
                     preparedStatement.close();
@@ -122,7 +122,7 @@ public class TransactionDAO {
                 return toSave;
             }
         } catch (SQLException exception) {
-            System.out.println("Error occurred while saving all accounts :\n"
+            System.out.println("Error occurred while saving all transactions :\n"
                     + exception.getMessage()
             );
         }
@@ -133,7 +133,7 @@ public class TransactionDAO {
         try {
             if (findById(toSave.getId()) == null) {
                 String query = """
-                        INSERT INTO \"transaction\" (label, amount, transaction_date, transaction_type, category, account_id)
+                        INSERT INTO \"transaction\" (label, amount, transaction_date, transaction_type, category_id, account_id)
                         VALUES(?, ?, ?, ?, ?, ?)
                     """;
                 PreparedStatement preparedStatement = connection.prepareStatement(query);
@@ -141,7 +141,7 @@ public class TransactionDAO {
                 preparedStatement.setBigDecimal(2, toSave.getAmount());
                 preparedStatement.setObject(3, toSave.getTransactionDate());
                 preparedStatement.setObject(4, toSave.getTransactionType());
-                preparedStatement.setObject(5, toSave.getCategory());
+                preparedStatement.setObject(5, toSave.getTransactionCategoryId());
                 preparedStatement.setInt(6, toSave.getAccountId());
 
                 preparedStatement.close();
@@ -160,7 +160,9 @@ public class TransactionDAO {
         try {
             String query = """
                 UPDATE \"tansaction\"
-                SET label = ?, amount = ?, transaction_date = ?, transaction_type = ?, category = ?, account_id
+                SET label = ?, amount = ?,
+                transaction_date = ?, transaction_type = ?,
+                category_id = ?, account_id = ?
                 WHERE id = ?
             """;
             PreparedStatement preparedStatement = connection.prepareStatement(query);
@@ -168,7 +170,7 @@ public class TransactionDAO {
             preparedStatement.setBigDecimal(2, transactionUpdated.getAmount());
             preparedStatement.setTimestamp(3, Timestamp.valueOf(transactionUpdated.getTransactionDate()));
             preparedStatement.setObject(4, transactionUpdated.getTransactionType());
-            preparedStatement.setObject(5, transactionUpdated.getCategory());
+            preparedStatement.setObject(5, transactionUpdated.getTransactionCategoryId());
             preparedStatement.setInt(6, transactionUpdated.getAccountId());
             preparedStatement.setInt(7, transactionUpdated.getId());
 

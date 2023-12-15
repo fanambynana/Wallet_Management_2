@@ -1,7 +1,7 @@
 package management.wallet.model.Enum;
 
-public enum SpecificCategories {
+public enum CategoryGroup {
     EXPENSE,
     INCOME,
-    OTHER
+    EITHER
 }
