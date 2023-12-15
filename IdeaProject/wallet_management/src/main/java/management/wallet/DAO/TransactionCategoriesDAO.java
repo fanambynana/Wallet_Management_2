@@ -1,7 +1,7 @@
 package management.wallet.DAO;
 
 import management.wallet.dbConnection.DbConnect;
-import management.wallet.model.Enum.SpecificCategories;
+import management.wallet.model.Enum.CategoryGroup;
 import management.wallet.model.TransactionCategories;
 import org.springframework.stereotype.Repository;
 
@@ -25,7 +25,7 @@ public class TransactionCategoriesDAO {
                 transactionCategories.add(new TransactionCategories(
                         resultSet.getInt("id"),
                         resultSet.getString("category_name"),
-                        (SpecificCategories) resultSet.getObject("Specific_Categories")
+                        (CategoryGroup) resultSet.getObject("Specific_Categories")
                 ));
             }
             statement.close();
@@ -48,7 +48,7 @@ public class TransactionCategoriesDAO {
                 return  new TransactionCategories(
                         resultSet.getInt("id"),
                         resultSet.getString("category_name"),
-                        (SpecificCategories) resultSet.getObject("specific_categories")
+                        (CategoryGroup) resultSet.getObject("specific_categories")
                 );
             }
 
