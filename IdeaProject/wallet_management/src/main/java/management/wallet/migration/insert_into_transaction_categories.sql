@@ -1,7 +1,7 @@
 DO $$
     BEGIN
         IF NOT EXISTS (SELECT 1 FROM transaction_categories WHERE category_name = 'Loan') THEN
-            INSERT INTO transaction_categories (category_name, category_group) VALUES ('Loan', 'both');
+            INSERT INTO transaction_categories (category_name, category_group) VALUES ('Loan', 'either');
         END IF;
 
         IF NOT EXISTS (SELECT 1 FROM transaction_categories WHERE category_name = 'Communication, PC') THEN
