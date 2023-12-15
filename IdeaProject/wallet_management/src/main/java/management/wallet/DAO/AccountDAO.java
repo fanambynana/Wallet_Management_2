@@ -2,11 +2,10 @@ package management.wallet.DAO;
 
 import management.wallet.dbConnection.DbConnect;
 import management.wallet.model.AccountSave;
-import management.wallet.model.AccountName;
-import management.wallet.model.AccountType;
+import management.wallet.model.Enum.AccountName;
+import management.wallet.model.Enum.AccountType;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;

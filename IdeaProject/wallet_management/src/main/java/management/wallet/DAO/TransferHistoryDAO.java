@@ -2,6 +2,8 @@ package management.wallet.DAO;
 
 import management.wallet.dbConnection.DbConnect;
 import management.wallet.model.*;
+import management.wallet.model.Enum.AccountName;
+import management.wallet.model.Enum.AccountType;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -9,7 +11,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
