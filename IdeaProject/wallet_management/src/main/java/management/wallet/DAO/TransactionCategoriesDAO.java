@@ -1,6 +1,7 @@
 package management.wallet.DAO;
 
 import management.wallet.dbConnection.DbConnect;
+import management.wallet.model.AmountPerCategory;
 import management.wallet.model.Enum.CategoryGroup;
 import management.wallet.model.TransactionCategories;
 import org.springframework.stereotype.Repository;
@@ -192,5 +193,43 @@ public class TransactionCategoriesDAO {
             );
         }
         return null;
+    }
+    public List<AmountPerCategory> findByIdAccount(int accountId, LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        List<AmountPerCategory> amountPerCategoryList = new ArrayList<>();
+        try {
+            String query = """
+                SELECT c.category_name, sum(
+                    CASE WHEN t.amount IS NULL THEN 0 ELSE t.amount
+                ) as amount
+                FROM \"transaction\" t
+                RIGHT JOIN transaction_category c
+                ON t.category_id = c.id
+                INNER JOIN \"account\" a
+                ON t.account_id = a.id
+                WHERE c.category_name ILIKE 'Restaurant'
+                AND t.transaction_date >= ?
+                AND t.transaction_date <= ?
+                AND a.id = ?
+                GROUP BY c.category_name
+            """;
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setObject(1, startDateTime);
+            statement.setObject(2, endDateTime);
+            statement.setInt(3, accountId);
+            ResultSet resultSet = statement.getResultSet();
+            while (resultSet.next()) {
+                amountPerCategoryList.add(new AmountPerCategory(
+                        resultSet.getString("category_name"),
+                        resultSet.getBigDecimal("amount")
+                ));
+            }
+            statement.close();
+            resultSet.close();
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while finding the expense amount :\n"
+                    + exception.getMessage()
+            );
+        }
+        return amountPerCategoryList;
     }
 }
