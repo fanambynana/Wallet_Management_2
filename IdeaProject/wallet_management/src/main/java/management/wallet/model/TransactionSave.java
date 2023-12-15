@@ -15,6 +15,6 @@ public class TransactionSave {
     private BigDecimal amount;
     private LocalDateTime transactionDate;
     private TransactionType transactionType;
-    private TransactionCategories category;
+    private int transactionCategoryId;
     private int accountId;
 }
