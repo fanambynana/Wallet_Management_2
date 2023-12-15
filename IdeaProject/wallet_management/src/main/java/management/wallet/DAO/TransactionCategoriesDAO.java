@@ -5,7 +5,9 @@ import management.wallet.model.Enum.CategoryGroup;
 import management.wallet.model.TransactionCategories;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -128,5 +130,67 @@ public class TransactionCategoriesDAO {
                     + e.getMessage());
             return false;
         }
+    }
+    public BigDecimal findIncomeByInterval(int accountId, LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        try {
+            String query = """
+                SELECT sum(t.amount) as income
+                FROM \"transaction\" t
+                INNER JOIN transaction_category c
+                ON t.category_id = c.id
+                INNER JOIN \"account\" a
+                ON t.account_id = a.id
+                WHERE c.category_group = 'income'
+                AND t.transaction_date >= ?
+                AND t.transaction_date <= ?
+                AND a.id = ?
+            """;
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setObject(1, startDateTime);
+            statement.setObject(2, endDateTime);
+            statement.setInt(3, accountId);
+            ResultSet resultSet = statement.getResultSet();
+            if (resultSet.next()) {
+                return resultSet.getBigDecimal("income");
+            }
+            statement.close();
+            resultSet.close();
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while finding the income amount :\n"
+                    + exception.getMessage()
+            );
+        }
+        return null;
+    }
+    public BigDecimal findExpenseByInterval(int accountId, LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        try {
+            String query = """
+                SELECT sum(t.amount) as income
+                FROM \"transaction\" t
+                INNER JOIN transaction_category c
+                ON t.category_id = c.id
+                INNER JOIN \"account\" a
+                ON t.account_id = a.id
+                WHERE c.category_group = 'expense'
+                AND t.transaction_date >= ?
+                AND t.transaction_date <= ?
+                AND a.id = ?
+            """;
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setObject(1, startDateTime);
+            statement.setObject(2, endDateTime);
+            statement.setInt(3, accountId);
+            ResultSet resultSet = statement.getResultSet();
+            if (resultSet.next()) {
+                return resultSet.getBigDecimal("income");
+            }
+            statement.close();
+            resultSet.close();
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while finding the expense amount :\n"
+                    + exception.getMessage()
+            );
+        }
+        return null;
     }
 }
