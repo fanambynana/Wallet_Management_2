@@ -3,5 +3,5 @@ CREATE TABLE IF NOT EXISTS currency_value(
     exchange_source_id INT NOT NULL REFERENCES currency(id),
     exchange_destination_id INT NOT NULL REFERENCES currency(id),
     exchange_value DECIMAL NOT NULL,
-    exchange_date DATE DEFAULT CURRENT_DATE
+    exchange_datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

@@ -1,4 +1,4 @@
-package management.wallet.service;
+package management.wallet.DAO;
 
 import java.util.List;
 

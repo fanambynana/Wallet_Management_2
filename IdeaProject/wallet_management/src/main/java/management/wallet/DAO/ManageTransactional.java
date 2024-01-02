@@ -10,20 +10,18 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Repository
 public class ManageTransactional {
     DbConnect dbConnect = new DbConnect();
     Connection connection = dbConnect.createConnection();
-    AccountDAO accountDAO;
-    TransactionDAO transactionDAO;
-    CurrencyDAO currencyDAO;
-    BalanceDAO balanceDAO;
-    BalanceHistoryDAO balanceHistoryDAO;
-    TransferHistoryDAO transferHistoryDAO;
-    CurrencyValueDAO currencyValueDAO;
+    AccountCrudOperation accountCrudOperation;
+    TransactionCrudOperation transactionCrudOperation;
+    CurrencyCrudOperation currencyCrudOperation;
+    BalanceCrudOperation balanceCrudOperation;
+    BalanceHistoryCrudOperation balanceHistoryCrudOperation;
+    TransferHistoryCrudOperation transferHistoryCrudOperation;
+    CurrencyValueCrudOperation currencyValueCrudOperation;
 
     public void beginTransactional() {
         try {
@@ -59,20 +57,20 @@ public class ManageTransactional {
     public AccountSave makeTransaction(int accountId, TransactionSave transaction) {
         beginTransactional();
         try {
-            AccountSave account = accountDAO.findById(accountId);
-            TransactionSave transactionSaved = transactionDAO.save(transaction);
-            Balance balanceSaved = balanceDAO.save(new Balance(
+            AccountSave account = accountCrudOperation.findById(accountId);
+            TransactionSave transactionSaved = transactionCrudOperation.save(transaction);
+            Balance balanceSaved = balanceCrudOperation.save(new Balance(
                     0,
                     transactionSaved.getAmount(),
                     LocalDateTime.now()
             ));
-            BalanceHistory balanceHistorySaved = balanceHistoryDAO.save(new BalanceHistory(
+            BalanceHistory balanceHistorySaved = balanceHistoryCrudOperation.save(new BalanceHistory(
                     0,
                     balanceSaved.getId(),
                     account.getId(),
                     LocalDateTime.now()
             ));
-            boolean accountUpdated = accountDAO.updateBalanceIdById(accountId, balanceSaved.getId());
+            boolean accountUpdated = accountCrudOperation.updateBalanceIdById(accountId, balanceSaved.getId());
             if (accountUpdated) {
                 commitTransactional();
                 return new AccountSave(
@@ -96,26 +94,26 @@ public class ManageTransactional {
     public AccountSave makeTransactionWithExchange(int creditAccountId, TransactionSave transaction) {
         beginTransactional();
         try {
-            TransactionSave transactionSaved = transactionDAO.save(transaction);
+            TransactionSave transactionSaved = transactionCrudOperation.save(transaction);
 
-            AccountSave debitAccount = accountDAO.findById(transactionSaved.getAccountId());
-            AccountSave creditAccount = accountDAO.findById(creditAccountId);
+            AccountSave debitAccount = accountCrudOperation.findById(transactionSaved.getAccountId());
+            AccountSave creditAccount = accountCrudOperation.findById(creditAccountId);
 
-            Balance currentDebitBalance = balanceDAO.findById(
+            Balance currentDebitBalance = balanceCrudOperation.findById(
                     debitAccount.getBalanceId()
             );
-            Balance currentCreditBalance = balanceDAO.findById(
+            Balance currentCreditBalance = balanceCrudOperation.findById(
                     creditAccount.getBalanceId()
             );
 
             if (
-                    currencyDAO.findById(debitAccount.getCurrencyId()).getCode()
+                    currencyCrudOperation.findById(debitAccount.getCurrencyId()).getCode()
                             .equals("EUR")
                     &&
-                    currencyDAO.findById(creditAccount.getCurrencyId()).getCode()
+                    currencyCrudOperation.findById(creditAccount.getCurrencyId()).getCode()
                             .equals("MGA")
             ) {
-                CurrencyValue currentCurrencyValue = currencyValueDAO.findByDate(LocalDate.now());
+                CurrencyValue currentCurrencyValue = currencyValueCrudOperation.findByDate(LocalDate.now());
 
                 BigDecimal debitAccountBalanceAmount = currentDebitBalance.getAmount();
                 BigDecimal creditAccountBalanceAmount = currentCreditBalance.getAmount();
@@ -127,41 +125,41 @@ public class ManageTransactional {
                         creditAccountBalanceAmount.multiply(currentCurrencyValue.getExchangeValue())
                 );
 
-                Balance debitBalanceSaved = balanceDAO.save(new Balance(
+                Balance debitBalanceSaved = balanceCrudOperation.save(new Balance(
                         0,
                         debitAccountBalanceAmount,
                         LocalDateTime.now()
                 ));
-                Balance creditBalanceSaved = balanceDAO.save(new Balance(
+                Balance creditBalanceSaved = balanceCrudOperation.save(new Balance(
                         0,
                         creditAccountBalanceAmount,
                         LocalDateTime.now()
                 ));
 
-                BalanceHistory debitBalanceHistorySaved = balanceHistoryDAO.save(new BalanceHistory(
+                BalanceHistory debitBalanceHistorySaved = balanceHistoryCrudOperation.save(new BalanceHistory(
                         0,
                         debitBalanceSaved.getId(),
                         debitAccount.getId(),
                         LocalDateTime.now()
                 ));
-                BalanceHistory creditBalanceHistorySaved = balanceHistoryDAO.save(new BalanceHistory(
+                BalanceHistory creditBalanceHistorySaved = balanceHistoryCrudOperation.save(new BalanceHistory(
                         0,
                         creditBalanceSaved.getId(),
                         creditAccount.getId(),
                         LocalDateTime.now()
                 ));
 
-                TransferHistory transferHistory = transferHistoryDAO.save(new TransferHistory(
+                TransferHistory transferHistory = transferHistoryCrudOperation.save(new TransferHistory(
                         0,
                         debitAccount.getId(),
                         creditAccount.getId(),
                         LocalDateTime.now()
                 ));
 
-                boolean debitAccountUpdated = accountDAO.updateBalanceIdById(
+                boolean debitAccountUpdated = accountCrudOperation.updateBalanceIdById(
                         debitAccount.getId(), debitAccount.getBalanceId()
                 );
-                boolean creditAccountUpdated = accountDAO.updateBalanceIdById(
+                boolean creditAccountUpdated = accountCrudOperation.updateBalanceIdById(
                         creditAccount.getId(), creditAccount.getBalanceId()
                 );
                 if (creditAccountUpdated && debitAccountUpdated) {
