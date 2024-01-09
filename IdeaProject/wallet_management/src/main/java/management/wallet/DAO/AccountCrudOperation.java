@@ -76,7 +76,7 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
                         resultSet.getInt("id"),
                         GetAccountName.getEnum(resultSet.getString("account_name")),
                         resultSet.getInt("balance_id"),
-                        resultSet.getInt("currency_i2d"),
+                        resultSet.getInt("currency_id"),
                         GetAccountType.getEnum(resultSet.getString("account_type"))
                 );
             }
@@ -104,15 +104,15 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
         try {
             for (AccountSave account : toSave) {
                 if (findById(account.getId()) == null) {
-                    String query = """
-                        INSERT INTO account(account_name, balance_id, currency_id, account_type)
-                        VALUES(?, ?, ?, ?)
-                    """;
+                    String query = "INSERT INTO account(account_name, balance_id, currency_id, account_type)"
+                            + "VALUES("
+                            + "'" + account.getAccountName().toString().toLowerCase() + "'"
+                            + ", ?, ?, "
+                            + "'" + account.getAccountType().toString().toLowerCase() + "'"
+                            + ")";
                     statement = connection.prepareStatement(query);
-                    statement.setObject(1, account.getAccountName());
-                    statement.setInt(2, account.getBalanceId());
-                    statement.setInt(3, account.getCurrencyId());
-                    statement.setObject(4, account.getAccountType());
+                    statement.setInt(1, account.getBalanceId());
+                    statement.setInt(2, account.getCurrencyId());
                     statement.executeUpdate();
                 } else {
                     update(account);
@@ -142,15 +142,15 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
         PreparedStatement statement = null;
         try {
             if (findById(toSave.getId()) == null) {
-                String query = """
-                        INSERT INTO account(account_name, balance_id, currency_id, account_type)
-                        VALUES(?, ?, ?, ?)
-                    """;
+                String query = "INSERT INTO account(account_name, balance_id, currency_id, account_type)"
+                    + "VALUES("
+                    + "'" + toSave.getAccountName().toString().toLowerCase() + "'"
+                    + ", ?, ?, "
+                    + "'" + toSave.getAccountType().toString().toLowerCase() + "'"
+                    + ")";
                 statement = connection.prepareStatement(query);
-                statement.setObject(1, toSave.getAccountName());
-                statement.setInt(2, toSave.getBalanceId());
-                statement.setInt(3, toSave.getCurrencyId());
-                statement.setObject(4, toSave.getAccountType());
+                statement.setInt(1, toSave.getBalanceId());
+                statement.setInt(2, toSave.getCurrencyId());
                 statement.executeUpdate();
             } else {
                 update(toSave);
@@ -178,18 +178,16 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
     public boolean update(AccountSave toUpdate) {
         PreparedStatement statement = null;
         try {
-            String query = """
-                UPDATE account
-                SET account_name = ?, balance_id = ?,
-                currency_id = ?, account_type = ?
-                WHERE id = ?
-            """;
+            String query = "UPDATE account"
+                + " SET"
+                + " account_name = '" + toUpdate.getAccountName().toString().toLowerCase() + "'"
+                + ", balance_id = ?, currency_id = ?"
+                + ", account_type = '" + toUpdate.getAccountType().toString().toLowerCase() + "'"
+                + "WHERE id = ?";
             statement = connection.prepareStatement(query);
-            statement.setObject(1, toUpdate.getAccountName());
-            statement.setInt(2, toUpdate.getBalanceId());
-            statement.setInt(3, toUpdate.getCurrencyId());
-            statement.setObject(4, toUpdate.getAccountType());
-            statement.setInt(5, toUpdate.getId());
+            statement.setInt(1, toUpdate.getBalanceId());
+            statement.setInt(2, toUpdate.getCurrencyId());
+            statement.setInt(3, toUpdate.getId());
 
             int rowsUpdated = statement.executeUpdate();
             statement.close();
