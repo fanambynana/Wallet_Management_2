@@ -27,7 +27,6 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
             statement = connection.prepareStatement(query);
             statement.execute();
             resultSet = statement.executeQuery(query);
-
             while (resultSet.next()) {
                 transactions.add(new TransactionSave(
                         resultSet.getInt("id"),
@@ -44,15 +43,17 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
                     + exception.getMessage()
             );
         } finally {
-            if (statement != null && resultSet != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                    resultSet.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
         return transactions;
@@ -63,12 +64,11 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
-            String query = "SELECT * FROM \"transaction\" WHERE id = ? ";
+            String query = "SELECT * FROM transaction WHERE id = ? ";
             statement = connection.prepareStatement(query);
             statement.setInt(1, id);
             statement.execute();
             resultSet = statement.getResultSet();
-
             if (resultSet.next()) {
                 return new TransactionSave(
                         resultSet.getInt("id"),
@@ -85,15 +85,17 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
                     + exception.getMessage()
             );
         } finally {
-            if (statement != null && resultSet != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                    resultSet.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
         return null;
@@ -102,11 +104,13 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
     @Override
     public List<TransactionSave> saveAll(List<TransactionSave> toSave) {
         PreparedStatement statement = null;
+        ResultSet resultSet = null;
+        List<TransactionSave> existingList = new ArrayList<>();
         try {
             for (TransactionSave transaction : toSave) {
                 if (findById(transaction.getId()) == null) {
                     String query = """
-                        INSERT INTO \"transaction\" (label, amount, transaction_date, transaction_type, category_id, account_id)
+                        INSERT INTO transaction (label, amount, transaction_date, transaction_type, category_id, account_id)
                         VALUES(?, ?, ?, ?, ?, ?)
                     """;
                     statement = connection.prepareStatement(query);
@@ -117,24 +121,29 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
                     statement.setObject(5, transaction.getTransactionCategoryId());
                     statement.setInt(6, transaction.getAccountId());
                     statement.executeUpdate();
+                    resultSet = statement.getResultSet();
+                    existingList.add(findById(transaction.getId()));
                 } else {
-                    update(transaction);
+                    existingList.add(update(transaction));
                 }
-                return toSave;
+                return existingList;
             }
         } catch (SQLException exception) {
             System.out.println("Error occurred while saving all transactions :\n"
                     + exception.getMessage()
             );
         } finally {
-            if (statement != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
         return null;
@@ -143,94 +152,99 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
     @Override
     public TransactionSave save(TransactionSave toSave) {
         PreparedStatement statement = null;
+        ResultSet resultSet = null;
         try {
             if (findById(toSave.getId()) == null) {
-                String query = """
-                        INSERT INTO \"transaction\" (label, amount, transaction_date, transaction_type, category_id, account_id)
-                        VALUES(?, ?, ?, ?, ?, ?)
-                    """;
+                String query = String.format("""
+                    INSERT INTO transaction (label, amount, transaction_date, transaction_type, category_id, account_id)
+                    VALUES(?, ?, ?, '%s', ?, ?)
+                """, toSave.getTransactionType().toString().toLowerCase());
                 statement = connection.prepareStatement(query);
                 statement.setString(1, toSave.getLabel());
                 statement.setBigDecimal(2, toSave.getAmount());
                 statement.setObject(3, toSave.getTransactionDate());
-                statement.setObject(4, toSave.getTransactionType());
-                statement.setObject(5, toSave.getTransactionCategoryId());
-                statement.setInt(6, toSave.getAccountId());
+                statement.setObject(4, toSave.getTransactionCategoryId());
+                statement.setInt(5, toSave.getAccountId());
                 statement.executeUpdate();
-                return toSave;
+                resultSet = statement.getResultSet();
+                return findById(toSave.getId());
             } else {
-                update(toSave);
+                return update(toSave);
             }
         } catch (SQLException exception) {
             System.out.println("Error occurred while saving the transaction :\n"
                     + exception.getMessage()
             );
         } finally {
-            if (statement != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
         return null;
     }
 
     @Override
-    public boolean update(TransactionSave toUpdate) {
+    public TransactionSave update(TransactionSave toUpdate) {
         PreparedStatement statement = null;
+        ResultSet resultSet = null;
         try {
-            String query = """
-                UPDATE \"tansaction\"
+            String query = String.format("""
+                UPDATE transaction
                 SET label = ?, amount = ?,
-                transaction_date = ?, transaction_type = ?,
+                transaction_date = ?, transaction_type = '%s',
                 category_id = ?, account_id = ?
                 WHERE id = ?
-            """;
+            """, toUpdate.getTransactionType().toString().toLowerCase());
             statement = connection.prepareStatement(query);
             statement.setString(1, toUpdate.getLabel());
             statement.setBigDecimal(2, toUpdate.getAmount());
             statement.setTimestamp(3, Timestamp.valueOf(toUpdate.getTransactionDate()));
-            statement.setObject(4, toUpdate.getTransactionType());
-            statement.setObject(5, toUpdate.getTransactionCategoryId());
-            statement.setInt(6, toUpdate.getAccountId());
-            statement.setInt(7, toUpdate.getId());
-
-            int rowsUpdated = statement.executeUpdate();
-            return rowsUpdated > 0;
+            statement.setObject(4, toUpdate.getTransactionCategoryId());
+            statement.setInt(5, toUpdate.getAccountId());
+            statement.setInt(6, toUpdate.getId());
+            statement.executeUpdate();
+            resultSet = statement.getResultSet();
         } catch (SQLException exception) {
             System.out.println("Error occurred while updating the transaction :\n"
                     + exception.getMessage());
         } finally {
-            if (statement != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
-        return false;
+        return findById(toUpdate.getId());
     }
 
     public List<TransactionSave> findByAccountId(int id) {
         PreparedStatement statement = null;
         ResultSet resultSet = null;
-        List<TransactionSave> transactions = new ArrayList<>();
+        List<TransactionSave> transactionList = new ArrayList<>();
         try {
-            String query = "SELECT * FROM \"transaction\" WHERE account_id = ? ";
+            String query = "SELECT * FROM transaction WHERE account_id = ? ";
             statement = connection.prepareStatement(query);
             statement.setInt(1, id);
             statement.execute();
             resultSet = statement.getResultSet();
-
             while (resultSet.next()) {
-                transactions.add(new TransactionSave(
+                transactionList.add(new TransactionSave(
                         resultSet.getInt("id"),
                         resultSet.getString("label"),
                         resultSet.getBigDecimal("amount"),
@@ -245,17 +259,19 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
                     + exception.getMessage()
             );
         } finally {
-            if (statement != null && resultSet != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                    resultSet.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
-        return transactions;
+        return transactionList;
     }
 }
