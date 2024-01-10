@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @Data
@@ -13,5 +14,5 @@ public class CurrencyValue {
     private int exchangeSourceId;
     private int exchangeDestinationId;
     private BigDecimal exchangeValue;
-    private LocalDate exchangeDate;
+    private LocalDateTime exchangeDateTime;
 }
