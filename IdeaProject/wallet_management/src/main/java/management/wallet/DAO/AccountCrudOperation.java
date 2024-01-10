@@ -25,15 +25,14 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
     public List<AccountSave> findAll() {
         PreparedStatement statement = null;
         ResultSet resultSet = null;
-        List<AccountSave> accounts = new ArrayList<>();
+        List<AccountSave> accountList = new ArrayList<>();
         try {
             String query = "SELECT * FROM account";
             statement = connection.prepareStatement(query);
             statement.execute();
             resultSet = statement.getResultSet();
-
             while (resultSet.next()) {
-                accounts.add(new AccountSave(
+                accountList.add(new AccountSave(
                         resultSet.getInt("id"),
                         GetAccountName.getEnum(resultSet.getString("account_name")),
                         resultSet.getInt("balance_id"),
@@ -46,18 +45,20 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
                     + exception.getMessage()
             );
         } finally {
-            if (statement != null && resultSet != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                    resultSet.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
-        return accounts;
+        return accountList;
     }
 
     @Override
@@ -70,7 +71,6 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
             statement.setInt(1, id);
             statement.execute();
             resultSet = statement.getResultSet();
-
             if (resultSet.next()) {
                 return new AccountSave(
                         resultSet.getInt("id"),
@@ -84,15 +84,17 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
             System.out.println("Error occurred while finding the account :\n"
                     + sqlException.getMessage());
         } finally {
-            if (statement != null && resultSet != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                    resultSet.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
         return null;
@@ -101,117 +103,136 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
     @Override
     public List<AccountSave> saveAll(List<AccountSave> toSave) {
         PreparedStatement statement = null;
+        ResultSet resultSet = null;
+        List<AccountSave> existingList = new ArrayList<>();
         try {
             for (AccountSave account : toSave) {
                 if (findById(account.getId()) == null) {
-                    String query = "INSERT INTO account(account_name, balance_id, currency_id, account_type)"
-                            + "VALUES("
-                            + "'" + account.getAccountName().toString().toLowerCase() + "'"
-                            + ", ?, ?, "
-                            + "'" + account.getAccountType().toString().toLowerCase() + "'"
-                            + ")";
+                    String query = String.format("""
+                        INSERT INTO account(account_name, balance_id, currency_id, account_type)
+                        VALUES
+                        ('%s', ?, ?, '%s')
+                    """,
+                        account.getAccountName().toString().toLowerCase(),
+                        account.getAccountType().toString().toLowerCase());
                     statement = connection.prepareStatement(query);
                     statement.setInt(1, account.getBalanceId());
                     statement.setInt(2, account.getCurrencyId());
                     statement.executeUpdate();
+                    resultSet = statement.getResultSet();
+                    existingList.add(findById(account.getId()));
                 } else {
-                    update(account);
+                    existingList.add(update(account));
                 }
             }
-            return toSave;
         } catch (SQLException exception) {
             System.out.println("Error occurred while saving all accounts :\n"
                     + exception.getMessage()
             );
         } finally {
-            if (statement != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
-        return null;
+        return existingList;
     }
 
     @Override
     public AccountSave save(AccountSave toSave) {
         PreparedStatement statement = null;
+        ResultSet resultSet = null;
         try {
             if (findById(toSave.getId()) == null) {
-                String query = "INSERT INTO account(account_name, balance_id, currency_id, account_type)"
-                    + "VALUES("
-                    + "'" + toSave.getAccountName().toString().toLowerCase() + "'"
-                    + ", ?, ?, "
-                    + "'" + toSave.getAccountType().toString().toLowerCase() + "'"
-                    + ")";
+                String query = String.format("""
+                    INSERT INTO account(account_name, balance_id, currency_id, account_type)
+                    VALUES
+                    ('%s', ?, ?, '%s')
+                """,
+                    toSave.getAccountName().toString().toLowerCase(),
+                    toSave.getAccountType().toString().toLowerCase());
                 statement = connection.prepareStatement(query);
                 statement.setInt(1, toSave.getBalanceId());
                 statement.setInt(2, toSave.getCurrencyId());
                 statement.executeUpdate();
+                resultSet = statement.getResultSet();
+                return findById(toSave.getId());
             } else {
-                update(toSave);
+                return update(toSave);
             }
-            return toSave;
         } catch (SQLException exception) {
             System.out.println("Error occurred while saving the account :\n"
                     + exception.getMessage()
             );
         } finally {
-            if (statement != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
         return null;
     }
 
     @Override
-    public boolean update(AccountSave toUpdate) {
+    public AccountSave update(AccountSave toUpdate) {
         PreparedStatement statement = null;
+        ResultSet resultSet = null;
         try {
-            String query = "UPDATE account"
-                + " SET"
-                + " account_name = '" + toUpdate.getAccountName().toString().toLowerCase() + "'"
-                + ", balance_id = ?, currency_id = ?"
-                + ", account_type = '" + toUpdate.getAccountType().toString().toLowerCase() + "'"
-                + "WHERE id = ?";
+            String query = String.format("""
+                UPDATE account
+                SET account_name = '%s',
+                balance_id = ?,
+                currency_id = ?,
+                account_type = '%s')
+            """,
+                toUpdate.getAccountName().toString().toLowerCase(),
+                toUpdate.getAccountType().toString().toLowerCase());
             statement = connection.prepareStatement(query);
             statement.setInt(1, toUpdate.getBalanceId());
             statement.setInt(2, toUpdate.getCurrencyId());
             statement.setInt(3, toUpdate.getId());
-
-            int rowsUpdated = statement.executeUpdate();
-            statement.close();
-
-            return rowsUpdated > 0;
+            statement.executeUpdate();
+            resultSet = statement.getResultSet();
+            return findById(toUpdate.getId());
         } catch (SQLException exception) {
             System.out.println("Error occurred while updating the account :\n"
                     + exception.getMessage()
             );
         } finally {
-            if (statement != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
-        return false;
+        return null;
     }
-    public boolean updateBalanceIdById (int accountId, int balanceId) {
+    public AccountSave updateBalanceIdById (int accountId, int balanceId) {
         PreparedStatement statement = null;
+        ResultSet resultSet = null;
         try {
             String query = """
                 UPDATE account
@@ -221,25 +242,27 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
             statement = connection.prepareStatement(query);
             statement.setObject(1, balanceId);
             statement.setInt(2, accountId);
-
-            int rowsUpdated = statement.executeUpdate();
-            return rowsUpdated > 0;
+            statement.executeUpdate();
+            resultSet = statement.getResultSet();
+            return findById(accountId);
         } catch (SQLException exception) {
-            System.out.println(
-                    "Error occurred while updating the account balance id :\n"
-                            + exception.getMessage()
+            System.out.println("Error occurred while updating the account balance id :\n"
+                    + exception.getMessage()
             );
         } finally {
-            if (statement != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
-        return false;
+        return null;
     }
 }
