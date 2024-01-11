@@ -1,13 +1,15 @@
 package management.wallet.DAO;
 
 import management.wallet.dbConnection.DbConnect;
+import management.wallet.model.*;
 import management.wallet.model.Enum.GetTransactionType;
 import management.wallet.model.Enum.TransactionType;
-import management.wallet.model.TransactionSave;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.sql.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +18,14 @@ import java.util.List;
 public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
     DbConnect dbConnect = new DbConnect();
     Connection connection = dbConnect.createConnection();
+
+    AccountCrudOperation accountCrudOperation = new AccountCrudOperation();
+    TransactionCrudOperation transactionCrudOperation = new TransactionCrudOperation();
+    CurrencyCrudOperation currencyCrudOperation = new CurrencyCrudOperation();
+    BalanceCrudOperation balanceCrudOperation = new BalanceCrudOperation();
+    BalanceHistoryCrudOperation balanceHistoryCrudOperation = new BalanceHistoryCrudOperation();
+    TransferHistoryCrudOperation transferHistoryCrudOperation = new  TransferHistoryCrudOperation();
+    CurrencyValueCrudOperation currencyValueCrudOperation = new CurrencyValueCrudOperation();
 
     @Override
     public List<TransactionSave> findAll() {
@@ -274,5 +284,233 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
             }
         }
         return transactionList;
+    }
+
+    public PreparedStatement beginTransactional() {
+        try {
+            String query = "BEGIN;";
+            return connection.prepareStatement(query);
+        } catch (SQLException sqlException) {
+            System.out.println("Error occurred :\n"
+                    + sqlException.getMessage()
+            );
+        }
+        return null;
+    }
+    public PreparedStatement commitTransactional() {
+        try {
+            String query = "COMMIT;";
+            return connection.prepareStatement(query);
+        } catch (SQLException sqlException) {
+            System.out.println("Error occurred :\n"
+                    + sqlException.getMessage()
+            );
+        }
+        return null;
+    }
+    public PreparedStatement rollbackTransactional() {
+        try {
+            String query = "ROLLBACK;";
+            return connection.prepareStatement(query);
+        } catch (SQLException sqlException) {
+            System.out.println("Error occurred :\n"
+                    + sqlException.getMessage()
+            );
+        }
+        return null;
+    }
+
+    public AccountSave makeTransaction(int accountId, TransactionSave transaction) {
+        PreparedStatement beginStatement = null;
+        PreparedStatement commitStatement = null;
+        PreparedStatement rollbackStatement = null;
+        try {
+            beginStatement = beginTransactional();
+            beginStatement.execute();
+            AccountSave account = accountCrudOperation.findById(accountId);
+            TransactionSave transactionSaved = transactionCrudOperation.save(transaction);
+            Balance balanceSaved = balanceCrudOperation.save(new Balance(
+                    0,
+                    transactionSaved.getAmount(),
+                    LocalDateTime.now()
+            ));
+            BalanceHistory balanceHistorySaved = balanceHistoryCrudOperation.save(new BalanceHistory(
+                    0,
+                    balanceSaved.getId(),
+                    account.getId(),
+                    LocalDateTime.now()
+            ));
+            AccountSave accountUpdated = accountCrudOperation.updateBalanceIdById(accountId, balanceSaved.getId());
+            if (
+                    transactionSaved != null
+                    &&
+                    balanceSaved != null
+                    &&
+                    balanceHistorySaved  != null
+                    &&
+                    accountUpdated != null
+            ) {
+                commitStatement = commitTransactional();
+                commitStatement.execute();
+                return new AccountSave(
+                        account.getId(),
+                        account.getAccountName(),
+                        balanceSaved.getId(),
+                        account.getCurrencyId(),
+                        account.getAccountType()
+                );
+            } else {
+                rollbackStatement = rollbackTransactional();
+                rollbackStatement.execute();
+            }
+        } catch (Exception exception) {
+            System.out.println("Error occurred while making the transaction :\n"
+                    + exception.getMessage()
+            );
+        } finally {
+            try {
+                if (beginStatement != null) {
+                    beginStatement.close();
+                }
+                if (commitStatement != null) {
+                    commitStatement.close();
+                }
+                if (rollbackStatement != null) {
+                    rollbackStatement.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
+            }
+        }
+        return null;
+    }
+    public AccountSave makeTransactionWithExchange(int creditAccountId, TransactionSave transaction) {
+        PreparedStatement beginStatement = null;
+        PreparedStatement commitStatement = null;
+        PreparedStatement rollbackStatement = null;
+        try {
+            beginStatement = beginTransactional();
+            beginStatement.execute();
+            TransactionSave transactionSaved = transactionCrudOperation.save(transaction);
+
+            AccountSave debitAccount = accountCrudOperation.findById(transactionSaved.getAccountId());
+            AccountSave creditAccount = accountCrudOperation.findById(creditAccountId);
+
+            Balance currentDebitBalance = balanceCrudOperation.findById(
+                    debitAccount.getBalanceId()
+            );
+            Balance currentCreditBalance = balanceCrudOperation.findById(
+                    creditAccount.getBalanceId()
+            );
+
+            if (
+                    currencyCrudOperation.findById(debitAccount.getCurrencyId()).getCode()
+                            .equals("EUR")
+                            &&
+                            currencyCrudOperation.findById(creditAccount.getCurrencyId()).getCode()
+                                    .equals("MGA")
+            ) {
+                CurrencyValue currentCurrencyValue = currencyValueCrudOperation.findByDate(LocalDate.now());
+
+                BigDecimal debitAccountBalanceAmount = currentDebitBalance.getAmount();
+                BigDecimal creditAccountBalanceAmount = currentCreditBalance.getAmount();
+
+                debitAccountBalanceAmount = debitAccountBalanceAmount.subtract(
+                        transactionSaved.getAmount()
+                );
+                creditAccountBalanceAmount = creditAccountBalanceAmount.add(
+                        creditAccountBalanceAmount.multiply(currentCurrencyValue.getExchangeValue())
+                );
+
+                Balance debitBalanceSaved = balanceCrudOperation.save(new Balance(
+                        0,
+                        debitAccountBalanceAmount,
+                        LocalDateTime.now()
+                ));
+                Balance creditBalanceSaved = balanceCrudOperation.save(new Balance(
+                        0,
+                        creditAccountBalanceAmount,
+                        LocalDateTime.now()
+                ));
+
+                BalanceHistory debitBalanceHistorySaved = balanceHistoryCrudOperation.save(new BalanceHistory(
+                        0,
+                        debitBalanceSaved.getId(),
+                        debitAccount.getId(),
+                        LocalDateTime.now()
+                ));
+                BalanceHistory creditBalanceHistorySaved = balanceHistoryCrudOperation.save(new BalanceHistory(
+                        0,
+                        creditBalanceSaved.getId(),
+                        creditAccount.getId(),
+                        LocalDateTime.now()
+                ));
+
+                TransferHistory transferHistory = transferHistoryCrudOperation.save(new TransferHistory(
+                        0,
+                        debitAccount.getId(),
+                        creditAccount.getId(),
+                        LocalDateTime.now()
+                ));
+
+                AccountSave debitAccountUpdated = accountCrudOperation.updateBalanceIdById(
+                        debitAccount.getId(), debitAccount.getBalanceId()
+                );
+                AccountSave creditAccountUpdated = accountCrudOperation.updateBalanceIdById(
+                        creditAccount.getId(), creditAccount.getBalanceId()
+                );
+                if (
+                        transactionSaved != null
+                        &&
+                        debitBalanceSaved != null
+                        &&
+                        creditBalanceSaved != null
+                        &&
+                        debitBalanceHistorySaved != null
+                        &&
+                        creditBalanceHistorySaved  != null
+                        &&
+                        debitAccountUpdated != null
+                        &&
+                        creditAccountUpdated != null
+                ) {
+                    commitStatement = commitTransactional();
+                    commitStatement.execute();
+                    return new AccountSave(
+                            debitAccount.getId(),
+                            debitAccount.getAccountName(),
+                            debitBalanceSaved.getId(),
+                            debitAccount.getCurrencyId(),
+                            debitAccount.getAccountType()
+                    );
+                } else {
+                    rollbackStatement = rollbackTransactional();
+                    rollbackStatement.execute();
+                }
+            }
+        } catch (Exception exception) {
+            System.out.println("Error occurred while making the transaction :\n"
+                    + exception.getMessage()
+            );
+        } finally {
+            try {
+                if (beginStatement != null) {
+                    beginStatement.close();
+                }
+                if (commitStatement != null) {
+                    commitStatement.close();
+                }
+                if (rollbackStatement != null) {
+                    rollbackStatement.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
+            }
+        }
+        return null;
     }
 }
