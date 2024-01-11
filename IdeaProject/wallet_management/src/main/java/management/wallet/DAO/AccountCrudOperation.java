@@ -200,6 +200,7 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
                 balance_id = ?,
                 currency_id = ?,
                 account_type = '%s'
+                WHERE id = ?
             """,
                 toUpdate.getAccountName().toString().toLowerCase(),
                 toUpdate.getAccountType().toString().toLowerCase());
