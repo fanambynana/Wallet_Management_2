@@ -11,11 +11,11 @@ import management.wallet.model.Enum.TransactionType;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class Main {
     AccountCrudOperation accountCrudOperation = new AccountCrudOperation();
+    /*
     BalanceCrudOperation balanceCrudOperation = new BalanceCrudOperation();
     BalanceHistoryCrudOperation balanceHistoryCrudOperation = new BalanceHistoryCrudOperation();
     CurrencyCrudOperation currencyCrudOperation = new CurrencyCrudOperation();
@@ -23,6 +23,7 @@ public class Main {
     TransactionCategoriesCrudOperation transactionCategoriesCrudOperation = new TransactionCategoriesCrudOperation();
     TransactionCrudOperation transactionCrudOperation = new TransactionCrudOperation();
     TransferHistoryCrudOperation transferHistoryCrudOperation = new TransferHistoryCrudOperation();
+    */
 
     public void runMain() {
         while (!Menu.toBreak) {
@@ -43,6 +44,7 @@ public class Main {
                 1,
                 AccountType.MOBILE_MONEY
         )));
+        /*
         System.out.println(balanceCrudOperation.save(new Balance(
                 4,
                 BigDecimal.valueOf(2000),
@@ -71,7 +73,6 @@ public class Main {
                 "Foods & Drinking",
                 CategoryGroup.EXPENSE
         )));
-
         System.out.println(transactionCrudOperation.save(new TransactionSave(
                 7,
                 "New Year Gift",
@@ -96,10 +97,17 @@ public class Main {
                 9,
                 Timestamp.valueOf("2023-12-02 02:00:00").toLocalDateTime()
         )));
+
+         */
     }
     public static void main(String[] args) {
         Main main = new Main();
         // main.runMain();
         main.runInsert();
     }
+
+    /*
+        Connection error :
+        FATAL: remaining connection slots are reserved for non-replication superuser connections
+     */
 }

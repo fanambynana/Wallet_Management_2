@@ -199,7 +199,7 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
                 SET account_name = '%s',
                 balance_id = ?,
                 currency_id = ?,
-                account_type = '%s')
+                account_type = '%s'
             """,
                 toUpdate.getAccountName().toString().toLowerCase(),
                 toUpdate.getAccountType().toString().toLowerCase());
