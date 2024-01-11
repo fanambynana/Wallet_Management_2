@@ -21,19 +21,17 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
     public List<Balance> findAll() {
         PreparedStatement statement = null;
         ResultSet resultSet = null;
-
-        List<Balance> balances  = new ArrayList<>();
+        List<Balance> balanceList  = new ArrayList<>();
         try {
             String query = "SELECT * FROM balance";
             statement = connection.prepareStatement(query);
             statement.execute();
             resultSet  = statement.getResultSet();
             while (resultSet.next()) {
-                balances.add(new Balance(
+                balanceList.add(new Balance(
                         resultSet.getInt("id"),
                         resultSet.getBigDecimal("amount"),
                         ((Timestamp) resultSet.getObject("update_datetime")).toLocalDateTime()
-                        // format : timestamp.toLocalDateTime()
                 ));
             }
         } catch (SQLException exception) {
@@ -41,32 +39,32 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
                     + exception.getMessage()
             );
         } finally {
-            if (statement != null && resultSet != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                    resultSet.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
-        return balances;
+        return balanceList;
     }
 
     @Override
     public Balance findById(int id) {
         PreparedStatement statement = null;
         ResultSet resultSet = null;
-
         try {
             String query = "SELECT * FROM balance WHERE id = ? ";
             statement = connection.prepareStatement(query);
             statement.setInt(1, id);
             statement.execute();
             resultSet  = statement.getResultSet();
-
             if (resultSet.next()) {
                 return new Balance(
                         resultSet.getInt("id"),
@@ -79,15 +77,17 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
                     + exception.getMessage()
             );
         } finally {
-            if (statement != null && resultSet != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                    resultSet.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
         return null;
@@ -96,7 +96,8 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
     @Override
     public List<Balance> saveAll(List<Balance> toSave) {
         PreparedStatement statement = null;
-
+        ResultSet resultSet = null;
+        List<Balance> existingList = new ArrayList<>();
         try {
             for (Balance balance : toSave) {
                 if (findById(balance.getId()) == null) {
@@ -108,33 +109,37 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
                     statement.setBigDecimal(1, balance.getAmount());
                     statement.setObject(2, balance.getUpdateDateTime());
                     statement.executeUpdate();
+                    resultSet = statement.getResultSet();
+                    existingList.add(findById(balance.getId()));
                 } else {
-                    update(balance);
+                    existingList.add(update(balance));
                 }
-                return toSave;
             }
         } catch (SQLException exception) {
             System.out.println("Error occurred while saving all balances :\n"
                     + exception.getMessage()
             );
         } finally {
-            if (statement != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
-        return null;
+        return existingList;
     }
 
     @Override
     public Balance save(Balance toSave) {
         PreparedStatement statement = null;
-
+        ResultSet resultSet = null;
         try {
             if (findById(toSave.getId()) == null) {
                 String query = """
@@ -145,31 +150,36 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
                 statement.setObject(1, toSave.getAmount());
                 statement.setObject(2, toSave.getUpdateDateTime());
                 statement.executeUpdate();
+                resultSet = statement.getResultSet();
+                return findById(toSave.getId());
             } else {
-                update(toSave);
+                return update(toSave);
             }
-            return toSave;
         } catch (SQLException exception) {
             System.out.println("Error occurred while saving the balance :\n"
                     + exception.getMessage()
             );
         } finally {
-            if (statement != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
         return null;
     }
 
     @Override
-    public boolean update(Balance toUpdate) {
+    public Balance update(Balance toUpdate) {
         PreparedStatement statement = null;
+        ResultSet resultSet = null;
         try {
             String query = """
             UPDATE balance
@@ -180,24 +190,27 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
             statement.setObject(1, toUpdate.getAmount());
             statement.setObject(2, toUpdate.getUpdateDateTime());
             statement.setInt(3, toUpdate.getId());
-
-            int rowsUpdated = statement.executeUpdate();
-            return rowsUpdated > 0;
+            statement.executeUpdate();
+            resultSet = statement.getResultSet();
+            return findById(toUpdate.getId());
         } catch (SQLException exception) {
             System.out.println("Error occurred while updating the balance :\n"
                     + exception.getMessage());
         } finally {
-            if (statement != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
-        return false;
+        return null;
     }
 
     public Balance findByDateTime(LocalDateTime dateTime) {
@@ -209,7 +222,6 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
             statement.setObject(1, dateTime);
             statement.execute();
             resultSet = statement.getResultSet();
-
             if (resultSet.next()) {
                 return new Balance(
                         resultSet.getInt("id"),
@@ -223,20 +235,21 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
             );
             // throw new RuntimeException(exception);
         } finally {
-            if(statement != null && resultSet != null){
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
+                }
+                if (resultSet != null) {
                     resultSet.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
                         + e.getMessage()
-                    );
-
-                    /*
+                );
+                /*
                     e.printStackTrace();
                     throw new RuntimeException(e);
-                     */
-                }
+                 */
             }
         }
         return null;
@@ -249,7 +262,7 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
     public List<Balance> findByInterval(LocalDateTime from, LocalDateTime to) {
         PreparedStatement statement = null;
         ResultSet resultSet = null;
-        List<Balance> balances = new ArrayList<>();
+        List<Balance> balanceList = new ArrayList<>();
         try {
             String query = """
                 SELECT
@@ -266,32 +279,31 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
             statement.setObject(2, to);
             statement.execute();
             resultSet  = statement.getResultSet();
-
             while (resultSet.next()) {
-                balances.add(new Balance(
+                balanceList.add(new Balance(
                         resultSet.getInt("id"),
                         resultSet.getBigDecimal("amount"),
                         ((Timestamp) resultSet.getObject("update_datetime")).toLocalDateTime()
                 ));
             }
-            statement.close();
-            resultSet.close();
         } catch (SQLException exception) {
             System.out.println("Error occurred while finding balances :\n"
                     + exception.getMessage()
             );
         } finally {
-            if (statement != null && resultSet != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                    resultSet.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
-        return balances;
+        return balanceList;
     }
 }

@@ -25,7 +25,6 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
             statement = connection.prepareStatement(query);
             statement.execute();
             resultSet  = statement.getResultSet();
-
             while (resultSet.next()) {
                 balanceHistories.add(new BalanceHistory(
                         resultSet.getInt("id"),
@@ -39,15 +38,17 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
                     + exception.getMessage()
             );
         } finally {
-            if (statement != null && resultSet != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                    resultSet.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
         return balanceHistories;
@@ -63,7 +64,6 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
             statement.setInt(1, id);
             statement.execute();
             resultSet  = statement.getResultSet();
-
             if (resultSet.next()) {
                 return new BalanceHistory(
                         resultSet.getInt("id"),
@@ -77,15 +77,17 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
                     + exception.getMessage()
             );
         } finally {
-            if (statement != null && resultSet != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                    resultSet.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
         return null;
@@ -94,6 +96,8 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
     @Override
     public List<BalanceHistory> saveAll(List<BalanceHistory> toSave) {
         PreparedStatement statement = null;
+        ResultSet resultSet = null;
+        List<BalanceHistory> existingList = new ArrayList<>();
         try {
             for (BalanceHistory history : toSave) {
                 if (findById(history.getId()) == null) {
@@ -106,32 +110,37 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
                     statement.setInt(2, history.getAccountId());
                     statement.setObject(3, history.getDateTime());
                     statement.executeUpdate();
+                    resultSet = statement.getResultSet();
+                    existingList.add(findById(history.getId()));
                 } else {
-                    update(history);
+                    existingList.add(update(history));
                 }
-                return toSave;
             }
         } catch (SQLException exception) {
             System.out.println("Error occurred while saving all balance histories :\n"
                     + exception.getMessage()
             );
         } finally {
-            if (statement != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
-        return null;
+        return existingList;
     }
 
     @Override
     public BalanceHistory save(BalanceHistory toSave) {
         PreparedStatement statement = null;
+        ResultSet resultSet = null;
         try {
             if (findById(toSave.getId()) == null) {
                 String query = """
@@ -143,31 +152,36 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
                 statement.setInt(2, toSave.getAccountId());
                 statement.setObject(3, toSave.getDateTime());
                 statement.execute();
+                resultSet = statement.getResultSet();
+                return findById(toSave.getId());
             } else {
-                update(toSave);
+                return update(toSave);
             }
-            return toSave;
         } catch (SQLException exception) {
             System.out.println("Error occurred while saving the balance history :\n"
                     + exception.getMessage()
             );
         } finally {
-            if (statement != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
         return null;
     }
 
     @Override
-    public boolean update(BalanceHistory toUpdate) {
+    public BalanceHistory update(BalanceHistory toUpdate) {
         PreparedStatement statement = null;
+        ResultSet resultSet = null;
         try {
             String query = """
                 UPDATE balance_history
@@ -179,24 +193,27 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
             statement.setInt(2, toUpdate.getAccountId());
             statement.setObject(3, toUpdate.getDateTime());
             statement.setInt(4, toUpdate.getId());
-
-            int rowsUpdated = statement.executeUpdate();
-            return rowsUpdated > 0;
+            statement.executeUpdate();
+            resultSet = statement.getResultSet();
+            return findById(toUpdate.getId());
         } catch (SQLException exception) {
             System.out.println("Error occurred while updating the balance history :\n"
                     + exception.getMessage());
         } finally {
-            if (statement != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
-        return false;
+        return null;
     }
 
     public BalanceHistory findByIntervalDateTime(LocalDateTime from, LocalDateTime to) {
@@ -211,7 +228,6 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
             statement.setObject(1, to);
             statement.execute();
             resultSet  = statement.getResultSet();
-
             if (resultSet.next()) {
                 return new BalanceHistory(
                         resultSet.getInt("id"),
@@ -225,15 +241,17 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
                     + exception.getMessage()
             );
         } finally {
-            if (statement != null && resultSet != null) {
-                try {
+            try {
+                if (statement != null) {
                     statement.close();
-                    resultSet.close();
-                } catch (SQLException e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
                 }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
             }
         }
         return null;

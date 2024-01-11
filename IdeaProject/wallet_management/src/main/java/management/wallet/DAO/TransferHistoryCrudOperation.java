@@ -19,13 +19,14 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
 
     @Override
     public List<TransferHistory> findAll() {
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
         List<TransferHistory> transferHistories = new ArrayList<>();
         try {
             String query = "SELECT * FROM transfer_history";
-            PreparedStatement statement = connection.prepareStatement(query);
+            statement = connection.prepareStatement(query);
             statement.execute();
-            ResultSet resultSet  = statement.getResultSet();
-
+            resultSet  = statement.getResultSet();
             while (resultSet.next()) {
                 transferHistories.add(new TransferHistory(
                         resultSet.getInt("id"),
@@ -34,25 +35,37 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
                         ((Timestamp) resultSet.getObject("datetime")).toLocalDateTime()
                 ));
             }
-            statement.close();
-            resultSet.close();
         } catch (SQLException exception) {
             System.out.println("Error occurred while finding all transfer histories :\n"
                     + exception.getMessage()
             );
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
+            }
         }
         return transferHistories;
     }
 
     @Override
     public TransferHistory findById(int id) {
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
         try {
             String query = "SELECT * FROM transfer_history WHERE id = ?";
-            PreparedStatement statement = connection.prepareStatement(query);
+            statement = connection.prepareStatement(query);
             statement.setInt(1, id);
             statement.execute();
-            ResultSet resultSet  = statement.getResultSet();
-
+            resultSet  = statement.getResultSet();
             if (resultSet.next()) {
                 return new TransferHistory(
                         resultSet.getInt("id"),
@@ -61,51 +74,163 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
                         ((Timestamp) resultSet.getObject("datetime")).toLocalDateTime()
                 );
             }
-            statement.close();
-            resultSet.close();
         } catch (SQLException exception) {
             System.out.println("Error occurred while finding all transfer histories :\n"
                     + exception.getMessage()
             );
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
+            }
         }
         return null;
     }
 
     @Override
     public List<TransferHistory> saveAll(List<TransferHistory> toSave) {
-        return null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+        List<TransferHistory> existingList = new ArrayList<>();
+        for (TransferHistory transfer : toSave) {
+            try {
+                if (findById(transfer.getId()) == null) {
+                    String query = """
+                        INSERT INTO transfer_history
+                        (debit_transaction_id, credit_transaction_id, datetime)
+                        VALUES(?, ?, ?)
+                    """;
+                    statement = connection.prepareStatement(query);
+                    statement.setInt(1, transfer.getDebitTransactionId());
+                    statement.setInt(2, transfer.getCreditTransactionId());
+                    statement.setObject(3, transfer.getDateTime());
+                    statement.executeUpdate();
+                    resultSet = statement.getResultSet();
+                    statement.close();
+
+                    existingList.add(findById(transfer.getId()));
+                } else {
+                    existingList.add(update(transfer));
+                }
+            } catch (SQLException exception) {
+                System.out.println("Error occurred while saving the balance history :\n"
+                        + exception.getMessage()
+                );
+            } finally {
+                try {
+                    if (statement != null) {
+                        statement.close();
+                    }
+                    if (resultSet != null) {
+                        resultSet.close();
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error while closing :\n"
+                            + e.getMessage()
+                    );
+                }
+            }
+        }
+        return existingList;
     }
 
     @Override
     public TransferHistory save(TransferHistory toSave) {
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
         try {
-            String query = """
-                        INSERT INTO transfer_history
-                        (debit_tansaction_id, credit_transaction_id, datetime)
-                        VALUES(?, ?, ?)
-                    """;
-            PreparedStatement statement = connection.prepareStatement(query);
-            statement.setInt(1, toSave.getDebitTransactionId());
-            statement.setInt(2, toSave.getCreditTransactionId());
-            statement.setObject(3, toSave.getDateTime());
-            statement.executeUpdate();
-            statement.close();
-            return toSave;
+            if (findById(toSave.getId()) == null) {
+                String query = """
+                    INSERT INTO transfer_history
+                    (debit_transaction_id, credit_transaction_id, datetime)
+                    VALUES(?, ?, ?)
+                """;
+                statement = connection.prepareStatement(query);
+                statement.setInt(1, toSave.getDebitTransactionId());
+                statement.setInt(2, toSave.getCreditTransactionId());
+                statement.setObject(3, toSave.getDateTime());
+                statement.executeUpdate();
+                resultSet = statement.getResultSet();
+                statement.close();
+                return findById(toSave.getId());
+            } else {
+                return update(toSave);
+            }
         } catch (SQLException exception) {
             System.out.println("Error occurred while saving the balance history :\n"
                     + exception.getMessage()
             );
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
+            }
         }
         return null;
     }
 
     @Override
-    public boolean update(TransferHistory toUpdate) {
-        return false;
+    public TransferHistory update(TransferHistory toUpdate) {
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+        try {
+            String query = """
+                UPDATE transfer_history
+                SET
+                debit_transaction_id = ?,
+                credit_transaction_id = ?,
+                datetime = ?
+                WHERE id = ?
+            """;
+            statement = connection.prepareStatement(query);
+            statement.setInt(1, toUpdate.getDebitTransactionId());
+            statement.setInt(2, toUpdate.getCreditTransactionId());
+            statement.setObject(3, toUpdate.getDateTime());
+            statement.setInt(4, toUpdate.getId());
+            statement.executeUpdate();
+            resultSet = statement.getResultSet();
+            return findById(toUpdate.getId());
+        } catch (SQLException exception) {
+            System.out.println("Error occurred while saving the balance history :\n"
+                    + exception.getMessage()
+            );
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
+            }
+        }
+        return null;
     }
 
     public List<AccountSave> findByIntervalReturnDebitAccount(LocalDateTime from, LocalDateTime to) {
-        List<AccountSave> accounts = new ArrayList<>();
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+        List<AccountSave> accountList = new ArrayList<>();
         try {
             String query = """
                 SELECT
@@ -117,14 +242,13 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
                 ON transaction.account_id = a.id
                 WHERE transfer_history.date_time BETWEEN ? AND ?
             """;
-            PreparedStatement statement = connection.prepareStatement(query);
+            statement = connection.prepareStatement(query);
             statement.setObject(1, from);
             statement.setObject(1, to);
             statement.execute();
-            ResultSet resultSet  = statement.getResultSet();
-
+            resultSet  = statement.getResultSet();
             while (resultSet.next()) {
-                accounts.add(new AccountSave(
+                accountList.add(new AccountSave(
                         resultSet.getInt("id"),
                         GetAccountName.getEnum(resultSet.getString("account_name")),
                         resultSet.getInt("balance_id"),
@@ -132,17 +256,30 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
                         GetAccountType.getEnum(resultSet.getString("account_type"))
                 ));
             }
-            statement.close();
-            resultSet.close();
         } catch (SQLException exception) {
             System.out.println("Error occurred while finding transfer histories :\n"
                     + exception.getMessage()
             );
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
+            }
         }
-        return accounts;
+        return accountList;
     }
     public  List<AccountSave> findByIntervalReturnCreditAccount(LocalDateTime from, LocalDateTime to) {
-        List<AccountSave> accounts = new ArrayList<>();
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+        List<AccountSave> accountList = new ArrayList<>();
         try {
             String query = """
                 SELECT
@@ -154,14 +291,13 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
                 ON transaction.account_id = a.id
                 WHERE transfer_history.date_time BETWEEN ? AND ?
             """;
-            PreparedStatement statement = connection.prepareStatement(query);
+            statement = connection.prepareStatement(query);
             statement.setObject(1, from);
             statement.setObject(1, to);
             statement.execute();
-            ResultSet resultSet  = statement.getResultSet();
-
+            resultSet  = statement.getResultSet();
             while (resultSet.next()) {
-                accounts.add(new AccountSave(
+                accountList.add(new AccountSave(
                         resultSet.getInt("id"),
                         GetAccountName.getEnum(resultSet.getString("account_name")),
                         resultSet.getInt("balance_id"),
@@ -169,17 +305,30 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
                         GetAccountType.getEnum(resultSet.getString("account_type"))
                 ));
             }
-            statement.close();
-            resultSet.close();
         } catch (SQLException exception) {
             System.out.println("Error occurred while finding transfer histories :\n"
                     + exception.getMessage()
             );
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
+            }
         }
-        return accounts;
+        return accountList;
     }
     public List<BigDecimal> findByIntervalReturnTransferAmount(LocalDateTime from, LocalDateTime to) {
-        List<BigDecimal> amounts = new ArrayList<>();
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+        List<BigDecimal> amountList = new ArrayList<>();
         try {
             String query = """
                 SELECT
@@ -191,26 +340,38 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
                 ON transaction.account_id = a.id
                 WHERE transfer_history.date_time BETWEEN ? AND ?
             """;
-            PreparedStatement statement = connection.prepareStatement(query);
+            statement = connection.prepareStatement(query);
             statement.setObject(1, from);
             statement.setObject(1, to);
             statement.execute();
-            ResultSet resultSet  = statement.getResultSet();
-
+            resultSet  = statement.getResultSet();
             while (resultSet.next()) {
-                amounts.add(resultSet.getBigDecimal("amount"));
+                amountList.add(resultSet.getBigDecimal("amount"));
             }
-            statement.close();
-            resultSet.close();
         } catch (SQLException exception) {
             System.out.println("Error occurred while finding transfer histories :\n"
                     + exception.getMessage()
             );
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
+            }
         }
-        return amounts;
+        return amountList;
     }
     public List<LocalDateTime> findByIntervalReturnTransferDateTime(LocalDateTime from, LocalDateTime to) {
-        List<LocalDateTime> datetimes = new ArrayList<>();
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+        List<LocalDateTime> dateTimeList = new ArrayList<>();
         try {
             String query = """
                 SELECT
@@ -222,22 +383,32 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
                 ON transaction.account_id = a.id
                 WHERE th.date_time BETWEEN ? AND ?
             """;
-            PreparedStatement statement = connection.prepareStatement(query);
+            statement = connection.prepareStatement(query);
             statement.setObject(1, from);
             statement.setObject(1, to);
             statement.execute();
-            ResultSet resultSet  = statement.getResultSet();
-
+            resultSet  = statement.getResultSet();
             while (resultSet.next()) {
-                datetimes.add((LocalDateTime) resultSet.getObject("datetime"));
+                dateTimeList.add(((Timestamp) resultSet.getObject("datetime")).toLocalDateTime());
             }
-            statement.close();
-            resultSet.close();
         } catch (SQLException exception) {
             System.out.println("Error occurred while finding transfer histories :\n"
                     + exception.getMessage()
             );
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
+            }
         }
-        return datetimes;
+        return dateTimeList;
     }
 }
