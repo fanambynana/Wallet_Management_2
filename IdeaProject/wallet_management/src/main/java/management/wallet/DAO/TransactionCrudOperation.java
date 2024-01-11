@@ -213,6 +213,7 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
             statement.setInt(6, toUpdate.getId());
             statement.executeUpdate();
             resultSet = statement.getResultSet();
+            return findById(toUpdate.getId());
         } catch (SQLException exception) {
             System.out.println("Error occurred while updating the transaction :\n"
                     + exception.getMessage());
@@ -230,7 +231,7 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
                 );
             }
         }
-        return findById(toUpdate.getId());
+        return null;
     }
 
     public List<TransactionSave> findByAccountId(int id) {
