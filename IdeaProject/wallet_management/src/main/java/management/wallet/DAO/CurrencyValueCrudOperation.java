@@ -14,11 +14,10 @@ import java.util.List;
 
 @Repository
 public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> {
-    DbConnect dbConnect = new DbConnect();
-    Connection connection = dbConnect.createConnection();
-
     @Override
     public List<CurrencyValue> findAll() {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         List<CurrencyValue> currencyValueList = new ArrayList<>();
@@ -26,7 +25,8 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
             String query = "SELECT * FROM currency_value";
             statement = connection.prepareStatement(query);
             statement.execute();
-            resultSet  = statement.getResultSet();
+            resultSet = statement.getResultSet();
+            connection.close();
             while (resultSet.next()) {
                 currencyValueList.add(new CurrencyValue(
                         resultSet.getInt("id"),
@@ -48,6 +48,7 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -59,6 +60,8 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
 
     @Override
     public CurrencyValue findById(int id) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -67,6 +70,7 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
             statement.setInt(1, id);
             statement.execute();
             resultSet  = statement.getResultSet();
+            connection.close();
             if (resultSet.next()) {
                 return new CurrencyValue(
                         resultSet.getInt("id"),
@@ -88,6 +92,7 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -99,44 +104,11 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
 
     @Override
     public List<CurrencyValue> saveAll(List<CurrencyValue> toSave) {
-        PreparedStatement statement = null;
-        ResultSet resultSet = null;
         List<CurrencyValue> existingList = new ArrayList<>();
         for (CurrencyValue currencyValue : toSave) {
-            try {
-                if (findById(currencyValue.getId()) == null) {
-                    String query = """
-                        INSERT INTO currency_value(exchange_source_id, exchange_destination_id, exchange_value, exchange_datetime)
-                        VALUES(?, ?, ?, ?)
-                    """;
-                    statement = connection.prepareStatement(query);
-                    statement.setInt(1, currencyValue.getExchangeSourceId());
-                    statement.setInt(2, currencyValue.getExchangeDestinationId());
-                    statement.setBigDecimal(3, currencyValue.getExchangeValue());
-                    statement.setObject(4, currencyValue.getExchangeDateTime());
-                    statement.executeUpdate();
-                    resultSet = statement.getResultSet();
-                    existingList.add(findById(currencyValue.getId()));
-                } else {
-                    existingList.add(update(currencyValue));
-                }
-            } catch (SQLException exception) {
-                System.out.println("Error occurred while saving the currency value :\n"
-                        + exception.getMessage()
-                );
-            } finally {
-                try {
-                    if (statement != null) {
-                        statement.close();
-                    }
-                    if (resultSet != null) {
-                        resultSet.close();
-                    }
-                } catch (Exception e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
-                }
+            CurrencyValue saved = save(currencyValue);
+            if (saved != null) {
+                existingList.add(saved);
             }
         }
         return existingList;
@@ -144,6 +116,8 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
 
     @Override
     public CurrencyValue save(CurrencyValue toSave) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -159,8 +133,10 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
                 statement.setObject(4, toSave.getExchangeDateTime());
                 statement.executeUpdate();
                 resultSet = statement.getResultSet();
+                connection.close();
                 return findById(toSave.getId());
             } else {
+                connection.close();
                 return update(toSave);
             }
         } catch (SQLException exception) {
@@ -175,6 +151,7 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -186,6 +163,8 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
 
     @Override
     public CurrencyValue update(CurrencyValue toUpdate) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -206,6 +185,7 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
             statement.setInt(5, toUpdate.getId());
             statement.executeUpdate();
             resultSet = statement.getResultSet();
+            connection.close();
             return findById(toUpdate.getId());
         } catch (SQLException exception) {
             System.out.println("Error occurred while updating the currency value :\n"
@@ -219,6 +199,7 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -229,6 +210,8 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
     }
 
     public List<CurrencyValue> findAllByDate(LocalDate date) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         List<CurrencyValue> currencyValueList = new ArrayList<>();
@@ -241,6 +224,7 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
             statement.setObject(1, date);
             statement.execute();
             resultSet  = statement.getResultSet();
+            connection.close();
             while (resultSet.next()) {
                 currencyValueList.add(new CurrencyValue(
                         resultSet.getInt("id"),
@@ -262,6 +246,7 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -271,6 +256,8 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
         return currencyValueList;
     }
     public BigDecimal findAvgByDate(LocalDate date) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -283,6 +270,7 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
             statement.setObject(1, date);
             statement.execute();
             resultSet  = statement.getResultSet();
+            connection.close();
             if (resultSet.next()) {
                 return (BigDecimal) resultSet.getObject("average");
             }
@@ -298,6 +286,7 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -307,6 +296,8 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
         return null;
     }
     public BigDecimal findMinByDate(LocalDate date) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -319,6 +310,7 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
             statement.setObject(1, date);
             statement.execute();
             resultSet  = statement.getResultSet();
+            connection.close();
             if (resultSet.next()) {
                 return (BigDecimal) resultSet.getObject("average");
             }
@@ -334,6 +326,7 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -343,6 +336,8 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
         return null;
     }
     public BigDecimal findMaxByDate(LocalDate date) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -355,6 +350,7 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
             statement.setObject(1, date);
             statement.execute();
             resultSet  = statement.getResultSet();
+            connection.close();
             if (resultSet.next()) {
                 return (BigDecimal) resultSet.getObject("average");
             }
@@ -370,6 +366,7 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -380,6 +377,8 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
     }
 
     public CurrencyValue findByDate(LocalDate date) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -388,6 +387,7 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
             statement.setObject(1, date);
             statement.execute();
             resultSet  = statement.getResultSet();
+            connection.close();
             if (resultSet.next()) {
                 return new CurrencyValue(
                         resultSet.getInt("id"),
@@ -409,6 +409,7 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()

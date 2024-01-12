@@ -14,11 +14,10 @@ import java.util.List;
 
 @Repository
 public class TransferHistoryCrudOperation implements CrudOperation<TransferHistory> {
-    DbConnect dbConnect = new DbConnect();
-    Connection connection = dbConnect.createConnection();
-
     @Override
     public List<TransferHistory> findAll() {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         List<TransferHistory> transferHistories = new ArrayList<>();
@@ -27,6 +26,7 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
             statement = connection.prepareStatement(query);
             statement.execute();
             resultSet  = statement.getResultSet();
+            connection.close();
             while (resultSet.next()) {
                 transferHistories.add(new TransferHistory(
                         resultSet.getInt("id"),
@@ -47,6 +47,7 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -58,6 +59,8 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
 
     @Override
     public TransferHistory findById(int id) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -66,6 +69,7 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
             statement.setInt(1, id);
             statement.execute();
             resultSet  = statement.getResultSet();
+            connection.close();
             if (resultSet.next()) {
                 return new TransferHistory(
                         resultSet.getInt("id"),
@@ -86,6 +90,7 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -97,46 +102,11 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
 
     @Override
     public List<TransferHistory> saveAll(List<TransferHistory> toSave) {
-        PreparedStatement statement = null;
-        ResultSet resultSet = null;
         List<TransferHistory> existingList = new ArrayList<>();
         for (TransferHistory transfer : toSave) {
-            try {
-                if (findById(transfer.getId()) == null) {
-                    String query = """
-                        INSERT INTO transfer_history
-                        (debit_transaction_id, credit_transaction_id, datetime)
-                        VALUES(?, ?, ?)
-                    """;
-                    statement = connection.prepareStatement(query);
-                    statement.setInt(1, transfer.getDebitTransactionId());
-                    statement.setInt(2, transfer.getCreditTransactionId());
-                    statement.setObject(3, transfer.getDateTime());
-                    statement.executeUpdate();
-                    resultSet = statement.getResultSet();
-                    statement.close();
-
-                    existingList.add(findById(transfer.getId()));
-                } else {
-                    existingList.add(update(transfer));
-                }
-            } catch (SQLException exception) {
-                System.out.println("Error occurred while saving the balance history :\n"
-                        + exception.getMessage()
-                );
-            } finally {
-                try {
-                    if (statement != null) {
-                        statement.close();
-                    }
-                    if (resultSet != null) {
-                        resultSet.close();
-                    }
-                } catch (Exception e) {
-                    System.out.println("Error while closing :\n"
-                            + e.getMessage()
-                    );
-                }
+            TransferHistory saved  = save(transfer);
+            if (saved  != null) {
+                existingList.add(saved);
             }
         }
         return existingList;
@@ -144,6 +114,8 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
 
     @Override
     public TransferHistory save(TransferHistory toSave) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -159,9 +131,10 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
                 statement.setObject(3, toSave.getDateTime());
                 statement.executeUpdate();
                 resultSet = statement.getResultSet();
-                statement.close();
+                connection.close();
                 return findById(toSave.getId());
             } else {
+                connection.close();
                 return update(toSave);
             }
         } catch (SQLException exception) {
@@ -176,6 +149,7 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -187,6 +161,8 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
 
     @Override
     public TransferHistory update(TransferHistory toUpdate) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -205,6 +181,7 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
             statement.setInt(4, toUpdate.getId());
             statement.executeUpdate();
             resultSet = statement.getResultSet();
+            connection.close();
             return findById(toUpdate.getId());
         } catch (SQLException exception) {
             System.out.println("Error occurred while saving the balance history :\n"
@@ -218,6 +195,7 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -228,6 +206,8 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
     }
 
     public List<AccountSave> findByIntervalReturnDebitAccount(LocalDateTime from, LocalDateTime to) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         List<AccountSave> accountList = new ArrayList<>();
@@ -247,6 +227,7 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
             statement.setObject(1, to);
             statement.execute();
             resultSet  = statement.getResultSet();
+            connection.close();
             while (resultSet.next()) {
                 accountList.add(new AccountSave(
                         resultSet.getInt("id"),
@@ -268,6 +249,7 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -277,6 +259,8 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
         return accountList;
     }
     public  List<AccountSave> findByIntervalReturnCreditAccount(LocalDateTime from, LocalDateTime to) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         List<AccountSave> accountList = new ArrayList<>();
@@ -296,6 +280,7 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
             statement.setObject(1, to);
             statement.execute();
             resultSet  = statement.getResultSet();
+            connection.close();
             while (resultSet.next()) {
                 accountList.add(new AccountSave(
                         resultSet.getInt("id"),
@@ -317,6 +302,7 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -326,6 +312,8 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
         return accountList;
     }
     public List<BigDecimal> findByIntervalReturnTransferAmount(LocalDateTime from, LocalDateTime to) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         List<BigDecimal> amountList = new ArrayList<>();
@@ -345,6 +333,7 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
             statement.setObject(1, to);
             statement.execute();
             resultSet  = statement.getResultSet();
+            connection.close();
             while (resultSet.next()) {
                 amountList.add(resultSet.getBigDecimal("amount"));
             }
@@ -360,6 +349,7 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -369,6 +359,8 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
         return amountList;
     }
     public List<LocalDateTime> findByIntervalReturnTransferDateTime(LocalDateTime from, LocalDateTime to) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         List<LocalDateTime> dateTimeList = new ArrayList<>();
@@ -388,6 +380,7 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
             statement.setObject(1, to);
             statement.execute();
             resultSet  = statement.getResultSet();
+            connection.close();
             while (resultSet.next()) {
                 dateTimeList.add(((Timestamp) resultSet.getObject("datetime")).toLocalDateTime());
             }
@@ -403,6 +396,7 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()

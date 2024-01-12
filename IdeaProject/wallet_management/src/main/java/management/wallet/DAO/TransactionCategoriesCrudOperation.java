@@ -16,11 +16,10 @@ import java.util.List;
 
 @Repository
 public class TransactionCategoriesCrudOperation implements CrudOperation<TransactionCategories> {
-    DbConnect connect = new DbConnect();
-    Connection connection = connect.createConnection();
-
     @Override
     public List<TransactionCategories> findAll() {
+        DbConnect connect = new DbConnect();
+        Connection connection = connect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         List<TransactionCategories> transactionCategoriesList = new ArrayList<>();
@@ -29,6 +28,7 @@ public class TransactionCategoriesCrudOperation implements CrudOperation<Transac
             statement = connection.prepareStatement(query);
             statement.execute();
             resultSet = statement.getResultSet();
+            connection.close();
             while (resultSet.next()) {
                 transactionCategoriesList.add(new TransactionCategories(
                         resultSet.getInt("id"),
@@ -48,6 +48,7 @@ public class TransactionCategoriesCrudOperation implements CrudOperation<Transac
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -59,6 +60,8 @@ public class TransactionCategoriesCrudOperation implements CrudOperation<Transac
 
     @Override
     public TransactionCategories findById(int id) {
+        DbConnect connect = new DbConnect();
+        Connection connection = connect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -67,6 +70,7 @@ public class TransactionCategoriesCrudOperation implements CrudOperation<Transac
             statement.setInt(1, id);
             statement.execute();
             resultSet = statement.getResultSet();
+            connection.close();
             if(resultSet.next()) {
                 return  new TransactionCategories(
                         resultSet.getInt("id"),
@@ -87,6 +91,7 @@ public class TransactionCategoriesCrudOperation implements CrudOperation<Transac
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -98,65 +103,34 @@ public class TransactionCategoriesCrudOperation implements CrudOperation<Transac
 
     @Override
     public List<TransactionCategories> saveAll(List<TransactionCategories> toSave) {
-        PreparedStatement statement = null;
-        ResultSet resultSet = null;
         List<TransactionCategories> existingList = new ArrayList<>();
-        try {
-            for (TransactionCategories transactionCategories : toSave){
-                if (findById(transactionCategories.getId()) == null ) {
-                    String query = """
-                        INSERT INTO transaction_categories (category_name, category_group) 
-                        VALUES (?, ?)
-                    """;
-                    statement = connection.prepareStatement(query);
-                    statement.setString(1, transactionCategories.getCategoryName());
-                    statement.setObject(2, transactionCategories.getCategoryGroup());
-                    statement.executeUpdate();
-                    resultSet = statement.getResultSet();
-                    existingList.add(findById(transactionCategories.getId()));
-                } else {
-                    existingList.add(update(transactionCategories));
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("Error occurred while saving all transaction categories :\n"
-                    + e.getMessage()
-            );
-            // throw new RuntimeException(e);
-        } finally {
-            try {
-                if (statement != null) {
-                    statement.close();
-                }
-                if (resultSet != null) {
-                    resultSet.close();
-                }
-            } catch (Exception e) {
-                System.out.println("Error while closing :\n"
-                        + e.getMessage()
-                );
-            }
+        for (TransactionCategories transactionCategory : toSave) {
+            TransactionCategories saved = save(transactionCategory);
+            existingList.add(saved);
         }
         return existingList;
     }
 
     @Override
     public TransactionCategories save(TransactionCategories toSave) {
+        DbConnect connect = new DbConnect();
+        Connection connection = connect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
             if (findById(toSave.getId()) == null ) {
-                String query = """
-                    INSERT INTO transaction_categories (category_name, category_group) 
-                    VALUES (?, ?)
-                """;
+                String query = String.format("""
+                    INSERT INTO transaction_categories (category_name, category_group)
+                    VALUES (?, '%s')
+                """, toSave.getCategoryGroup().toString().toLowerCase());
                 statement = connection.prepareStatement(query);
                 statement.setString(1, toSave.getCategoryName());
-                statement.setObject(2, toSave.getCategoryGroup());
                 statement.executeUpdate();
                 resultSet = statement.getResultSet();
+                connection.close();
                 return findById(toSave.getId());
             } else {
+                connection.close();
                 return update(toSave);
             }
         } catch (Exception e) {
@@ -171,6 +145,7 @@ public class TransactionCategoriesCrudOperation implements CrudOperation<Transac
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -182,20 +157,22 @@ public class TransactionCategoriesCrudOperation implements CrudOperation<Transac
 
     @Override
     public TransactionCategories update(TransactionCategories toUpdate) {
+        DbConnect connect = new DbConnect();
+        Connection connection = connect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
-            String query = """
+            String query = String.format("""
                 UPDATE transaction_categories
-                SET category_name = ?, category_group = ?
+                SET category_name = ?, category_group = '%s'
                 WHERE id = ?
-            """;
+            """, toUpdate.getCategoryGroup().toString().toLowerCase());
             statement = connection.prepareStatement(query);
             statement.setString(1, toUpdate.getCategoryName());
-            statement.setObject(2, toUpdate.getCategoryGroup());
-            statement.setInt(3, toUpdate.getId());
+            statement.setInt(2, toUpdate.getId());
             statement.executeUpdate();
             resultSet = statement.getResultSet();
+            connection.close();
             return findById(toUpdate.getId());
         } catch (SQLException e) {
             System.out.println("Error occurred while updating the transaction category :\n"
@@ -208,6 +185,7 @@ public class TransactionCategoriesCrudOperation implements CrudOperation<Transac
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -218,6 +196,8 @@ public class TransactionCategoriesCrudOperation implements CrudOperation<Transac
     }
 
     public BigDecimal findIncomeByInterval(int accountId, LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        DbConnect connect = new DbConnect();
+        Connection connection = connect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -239,6 +219,7 @@ public class TransactionCategoriesCrudOperation implements CrudOperation<Transac
             statement.setInt(3, accountId);
             statement.execute();
             resultSet = statement.getResultSet();
+            connection.close();
             if (resultSet.next()) {
                 return resultSet.getBigDecimal("income");
             }
@@ -254,6 +235,7 @@ public class TransactionCategoriesCrudOperation implements CrudOperation<Transac
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -263,6 +245,8 @@ public class TransactionCategoriesCrudOperation implements CrudOperation<Transac
         return null;
     }
     public BigDecimal findExpenseByInterval(int accountId, LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        DbConnect connect = new DbConnect();
+        Connection connection = connect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -284,6 +268,7 @@ public class TransactionCategoriesCrudOperation implements CrudOperation<Transac
             statement.setInt(3, accountId);
             statement.execute();
             resultSet = statement.getResultSet();
+            connection.close();
             if (resultSet.next()) {
                 return resultSet.getBigDecimal("income");
             }
@@ -299,6 +284,7 @@ public class TransactionCategoriesCrudOperation implements CrudOperation<Transac
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -308,6 +294,8 @@ public class TransactionCategoriesCrudOperation implements CrudOperation<Transac
         return null;
     }
     public List<AmountPerCategory> findByIdAccount(int accountId, LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        DbConnect connect = new DbConnect();
+        Connection connection = connect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         List<AmountPerCategory> amountPerCategoryList = new ArrayList<>();
@@ -333,6 +321,7 @@ public class TransactionCategoriesCrudOperation implements CrudOperation<Transac
             statement.setInt(3, accountId);
             statement.execute();
             resultSet = statement.getResultSet();
+            connection.close();
             while (resultSet.next()) {
                 amountPerCategoryList.add(new AmountPerCategory(
                         resultSet.getString("category_name"),
@@ -351,6 +340,7 @@ public class TransactionCategoriesCrudOperation implements CrudOperation<Transac
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
