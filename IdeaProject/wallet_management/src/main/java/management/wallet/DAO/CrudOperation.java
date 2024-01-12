@@ -1,4 +1,4 @@
-package management.wallet.service;
+package management.wallet.DAO;
 
 import java.util.List;
 
@@ -11,5 +11,5 @@ public interface CrudOperation<T> {
 
     T save(T toSave);
 
-    boolean update(T toUpdate);
+    T update(T toUpdate);
 }
