@@ -11,14 +11,12 @@ import java.util.List;
 
 @Repository
 public class BalanceCrudOperation implements CrudOperation<Balance> {
-    DbConnect dbConnect = new DbConnect();
-    Connection connection = dbConnect.createConnection();
-
-    BalanceCrudOperation balanceCrudOperation;
-    AccountCrudOperation accountCrudOperation;
+    AccountCrudOperation accountCrudOperation = new AccountCrudOperation();
 
     @Override
     public List<Balance> findAll() {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         List<Balance> balanceList  = new ArrayList<>();
@@ -34,6 +32,7 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
                         ((Timestamp) resultSet.getObject("update_datetime")).toLocalDateTime()
                 ));
             }
+            connection.close();
         } catch (SQLException exception) {
             System.out.println("Error occurred while finding all balances :\n"
                     + exception.getMessage()
@@ -46,6 +45,7 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -57,6 +57,8 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
 
     @Override
     public Balance findById(int id) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -65,6 +67,7 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
             statement.setInt(1, id);
             statement.execute();
             resultSet  = statement.getResultSet();
+            connection.close();
             if (resultSet.next()) {
                 return new Balance(
                         resultSet.getInt("id"),
@@ -84,6 +87,7 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -95,42 +99,11 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
 
     @Override
     public List<Balance> saveAll(List<Balance> toSave) {
-        PreparedStatement statement = null;
-        ResultSet resultSet = null;
         List<Balance> existingList = new ArrayList<>();
-        try {
-            for (Balance balance : toSave) {
-                if (findById(balance.getId()) == null) {
-                    String query = """
-                        INSERT INTO balance(amount, update_datetime)
-                        VALUES(?, ?)
-                    """;
-                    statement = connection.prepareStatement(query);
-                    statement.setBigDecimal(1, balance.getAmount());
-                    statement.setObject(2, balance.getUpdateDateTime());
-                    statement.executeUpdate();
-                    resultSet = statement.getResultSet();
-                    existingList.add(findById(balance.getId()));
-                } else {
-                    existingList.add(update(balance));
-                }
-            }
-        } catch (SQLException exception) {
-            System.out.println("Error occurred while saving all balances :\n"
-                    + exception.getMessage()
-            );
-        } finally {
-            try {
-                if (statement != null) {
-                    statement.close();
-                }
-                if (resultSet != null) {
-                    resultSet.close();
-                }
-            } catch (Exception e) {
-                System.out.println("Error while closing :\n"
-                        + e.getMessage()
-                );
+        for (Balance balance : toSave) {
+            Balance saved = save(balance);
+            if (saved != null){
+                existingList.add(saved);
             }
         }
         return existingList;
@@ -138,6 +111,8 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
 
     @Override
     public Balance save(Balance toSave) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -151,8 +126,10 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
                 statement.setObject(2, toSave.getUpdateDateTime());
                 statement.executeUpdate();
                 resultSet = statement.getResultSet();
+                connection.close();
                 return findById(toSave.getId());
             } else {
+                connection.close();
                 return update(toSave);
             }
         } catch (SQLException exception) {
@@ -167,6 +144,7 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -178,6 +156,8 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
 
     @Override
     public Balance update(Balance toUpdate) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -192,6 +172,7 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
             statement.setInt(3, toUpdate.getId());
             statement.executeUpdate();
             resultSet = statement.getResultSet();
+            connection.close();
             return findById(toUpdate.getId());
         } catch (SQLException exception) {
             System.out.println("Error occurred while updating the balance :\n"
@@ -204,6 +185,7 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -214,6 +196,8 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
     }
 
     public Balance findByDateTime(LocalDateTime dateTime) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -222,6 +206,7 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
             statement.setObject(1, dateTime);
             statement.execute();
             resultSet = statement.getResultSet();
+            connection.close();
             if (resultSet.next()) {
                 return new Balance(
                         resultSet.getInt("id"),
@@ -242,6 +227,7 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -255,11 +241,13 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
         return null;
     }
     public Balance findCurrentBalance(int accountId) {
-        return balanceCrudOperation.findById(
+        return findById(
                 accountCrudOperation.findById(accountId).getBalanceId()
         );
     }
     public List<Balance> findByInterval(LocalDateTime from, LocalDateTime to) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         List<Balance> balanceList = new ArrayList<>();
@@ -286,6 +274,7 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
                         ((Timestamp) resultSet.getObject("update_datetime")).toLocalDateTime()
                 ));
             }
+            connection.close();
         } catch (SQLException exception) {
             System.out.println("Error occurred while finding balances :\n"
                     + exception.getMessage()
@@ -298,6 +287,7 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()

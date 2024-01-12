@@ -16,11 +16,7 @@ import java.util.List;
 
 @Repository
 public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
-    DbConnect dbConnect = new DbConnect();
-    Connection connection = dbConnect.createConnection();
-
     AccountCrudOperation accountCrudOperation = new AccountCrudOperation();
-    TransactionCrudOperation transactionCrudOperation = new TransactionCrudOperation();
     CurrencyCrudOperation currencyCrudOperation = new CurrencyCrudOperation();
     BalanceCrudOperation balanceCrudOperation = new BalanceCrudOperation();
     BalanceHistoryCrudOperation balanceHistoryCrudOperation = new BalanceHistoryCrudOperation();
@@ -29,6 +25,8 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
 
     @Override
     public List<TransactionSave> findAll() {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         List<TransactionSave> transactions = new ArrayList<>();
@@ -37,6 +35,7 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
             statement = connection.prepareStatement(query);
             statement.execute();
             resultSet = statement.executeQuery(query);
+            connection.close();
             while (resultSet.next()) {
                 transactions.add(new TransactionSave(
                         resultSet.getInt("id"),
@@ -60,6 +59,7 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -71,6 +71,8 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
 
     @Override
     public TransactionSave findById(int id) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -79,6 +81,7 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
             statement.setInt(1, id);
             statement.execute();
             resultSet = statement.getResultSet();
+            connection.close();
             if (resultSet.next()) {
                 return new TransactionSave(
                         resultSet.getInt("id"),
@@ -102,6 +105,7 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -113,54 +117,20 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
 
     @Override
     public List<TransactionSave> saveAll(List<TransactionSave> toSave) {
-        PreparedStatement statement = null;
-        ResultSet resultSet = null;
         List<TransactionSave> existingList = new ArrayList<>();
-        try {
-            for (TransactionSave transaction : toSave) {
-                if (findById(transaction.getId()) == null) {
-                    String query = """
-                        INSERT INTO transaction (label, amount, transaction_date, transaction_type, category_id, account_id)
-                        VALUES(?, ?, ?, ?, ?, ?)
-                    """;
-                    statement = connection.prepareStatement(query);
-                    statement.setString(1, transaction.getLabel());
-                    statement.setBigDecimal(2, transaction.getAmount());
-                    statement.setObject(3, transaction.getTransactionDate());
-                    statement.setObject(4, transaction.getTransactionType());
-                    statement.setObject(5, transaction.getTransactionCategoryId());
-                    statement.setInt(6, transaction.getAccountId());
-                    statement.executeUpdate();
-                    resultSet = statement.getResultSet();
-                    existingList.add(findById(transaction.getId()));
-                } else {
-                    existingList.add(update(transaction));
-                }
-                return existingList;
-            }
-        } catch (SQLException exception) {
-            System.out.println("Error occurred while saving all transactions :\n"
-                    + exception.getMessage()
-            );
-        } finally {
-            try {
-                if (statement != null) {
-                    statement.close();
-                }
-                if (resultSet != null) {
-                    resultSet.close();
-                }
-            } catch (Exception e) {
-                System.out.println("Error while closing :\n"
-                        + e.getMessage()
-                );
+        for (TransactionSave transaction : toSave) {
+            TransactionSave saved  = save(transaction);
+            if (saved != null) {
+                existingList.add(saved);
             }
         }
-        return null;
+        return existingList;
     }
 
     @Override
     public TransactionSave save(TransactionSave toSave) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -177,8 +147,10 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
                 statement.setInt(5, toSave.getAccountId());
                 statement.executeUpdate();
                 resultSet = statement.getResultSet();
+                connection.close();
                 return findById(toSave.getId());
             } else {
+                connection.close();
                 return update(toSave);
             }
         } catch (SQLException exception) {
@@ -193,6 +165,7 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -204,6 +177,8 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
 
     @Override
     public TransactionSave update(TransactionSave toUpdate) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -223,6 +198,7 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
             statement.setInt(6, toUpdate.getId());
             statement.executeUpdate();
             resultSet = statement.getResultSet();
+            connection.close();
             return findById(toUpdate.getId());
         } catch (SQLException exception) {
             System.out.println("Error occurred while updating the transaction :\n"
@@ -235,6 +211,7 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -245,6 +222,8 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
     }
 
     public List<TransactionSave> findByAccountId(int id) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         List<TransactionSave> transactionList = new ArrayList<>();
@@ -254,6 +233,7 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
             statement.setInt(1, id);
             statement.execute();
             resultSet = statement.getResultSet();
+            connection.close();
             while (resultSet.next()) {
                 transactionList.add(new TransactionSave(
                         resultSet.getInt("id"),
@@ -277,6 +257,7 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -287,6 +268,8 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
     }
 
     public PreparedStatement beginTransactional() {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         try {
             String query = "BEGIN;";
             return connection.prepareStatement(query);
@@ -298,6 +281,8 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
         return null;
     }
     public PreparedStatement commitTransactional() {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         try {
             String query = "COMMIT;";
             return connection.prepareStatement(query);
@@ -309,6 +294,8 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
         return null;
     }
     public PreparedStatement rollbackTransactional() {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         try {
             String query = "ROLLBACK;";
             return connection.prepareStatement(query);
@@ -328,7 +315,7 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
             beginStatement = beginTransactional();
             beginStatement.execute();
             AccountSave account = accountCrudOperation.findById(accountId);
-            TransactionSave transactionSaved = transactionCrudOperation.save(transaction);
+            TransactionSave transactionSaved = save(transaction);
             Balance balanceSaved = balanceCrudOperation.save(new Balance(
                     0,
                     transactionSaved.getAmount(),
@@ -393,7 +380,7 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
         try {
             beginStatement = beginTransactional();
             beginStatement.execute();
-            TransactionSave transactionSaved = transactionCrudOperation.save(transaction);
+            TransactionSave transactionSaved = save(transaction);
 
             AccountSave debitAccount = accountCrudOperation.findById(transactionSaved.getAccountId());
             AccountSave creditAccount = accountCrudOperation.findById(creditAccountId);

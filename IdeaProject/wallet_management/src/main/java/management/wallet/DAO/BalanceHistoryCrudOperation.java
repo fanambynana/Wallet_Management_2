@@ -12,11 +12,10 @@ import java.util.List;
 
 @Repository
 public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory> {
-    DbConnect dbConnect = new DbConnect();
-    Connection connection = dbConnect.createConnection();
-
     @Override
     public List<BalanceHistory> findAll() {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         List<BalanceHistory> balanceHistories  = new ArrayList<>();
@@ -33,6 +32,7 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
                         ((Timestamp) resultSet.getObject("datetime")).toLocalDateTime()
                 ));
             }
+            connection.close();
         } catch (SQLException exception) {
             System.out.println("Error occurred while finding all balance histories :\n"
                     + exception.getMessage()
@@ -45,6 +45,7 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -56,6 +57,8 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
 
     @Override
     public BalanceHistory findById(int id) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -64,6 +67,7 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
             statement.setInt(1, id);
             statement.execute();
             resultSet  = statement.getResultSet();
+            connection.close();
             if (resultSet.next()) {
                 return new BalanceHistory(
                         resultSet.getInt("id"),
@@ -84,6 +88,7 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -95,43 +100,11 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
 
     @Override
     public List<BalanceHistory> saveAll(List<BalanceHistory> toSave) {
-        PreparedStatement statement = null;
-        ResultSet resultSet = null;
         List<BalanceHistory> existingList = new ArrayList<>();
-        try {
-            for (BalanceHistory history : toSave) {
-                if (findById(history.getId()) == null) {
-                    String query = """
-                        INSERT INTO balance_history(balance_id, account_id, datetime)
-                        VALUES(?, ?, ?)
-                    """;
-                    statement = connection.prepareStatement(query);
-                    statement.setInt(1, history.getBalanceId());
-                    statement.setInt(2, history.getAccountId());
-                    statement.setObject(3, history.getDateTime());
-                    statement.executeUpdate();
-                    resultSet = statement.getResultSet();
-                    existingList.add(findById(history.getId()));
-                } else {
-                    existingList.add(update(history));
-                }
-            }
-        } catch (SQLException exception) {
-            System.out.println("Error occurred while saving all balance histories :\n"
-                    + exception.getMessage()
-            );
-        } finally {
-            try {
-                if (statement != null) {
-                    statement.close();
-                }
-                if (resultSet != null) {
-                    resultSet.close();
-                }
-            } catch (Exception e) {
-                System.out.println("Error while closing :\n"
-                        + e.getMessage()
-                );
+        for (BalanceHistory balanceHistory : toSave) {
+            BalanceHistory saved = save(balanceHistory);
+            if (saved != null) {
+                existingList.add(saved);
             }
         }
         return existingList;
@@ -139,6 +112,8 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
 
     @Override
     public BalanceHistory save(BalanceHistory toSave) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -153,8 +128,10 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
                 statement.setObject(3, toSave.getDateTime());
                 statement.execute();
                 resultSet = statement.getResultSet();
+                connection.close();
                 return findById(toSave.getId());
             } else {
+                connection.close();
                 return update(toSave);
             }
         } catch (SQLException exception) {
@@ -169,6 +146,7 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -180,6 +158,8 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
 
     @Override
     public BalanceHistory update(BalanceHistory toUpdate) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -195,6 +175,7 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
             statement.setInt(4, toUpdate.getId());
             statement.executeUpdate();
             resultSet = statement.getResultSet();
+            connection.close();
             return findById(toUpdate.getId());
         } catch (SQLException exception) {
             System.out.println("Error occurred while updating the balance history :\n"
@@ -207,6 +188,7 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -217,6 +199,8 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
     }
 
     public BalanceHistory findByIntervalDateTime(LocalDateTime from, LocalDateTime to) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -228,6 +212,7 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
             statement.setObject(1, to);
             statement.execute();
             resultSet  = statement.getResultSet();
+            connection.close();
             if (resultSet.next()) {
                 return new BalanceHistory(
                         resultSet.getInt("id"),
@@ -248,6 +233,7 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
