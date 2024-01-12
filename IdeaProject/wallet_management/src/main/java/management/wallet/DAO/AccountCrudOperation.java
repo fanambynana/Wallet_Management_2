@@ -18,11 +18,10 @@ import java.util.List;
 
 @Repository
 public class AccountCrudOperation implements CrudOperation<AccountSave>{
-    DbConnect dbConnect = new DbConnect();
-    Connection connection = dbConnect.createConnection();
-
     @Override
     public List<AccountSave> findAll() {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         List<AccountSave> accountList = new ArrayList<>();
@@ -40,6 +39,7 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
                         GetAccountType.getEnum(resultSet.getString("account_type"))
                 ));
             }
+            connection.close();
         } catch (SQLException exception) {
             System.out.println("Error occurred while finding all accounts :\n"
                     + exception.getMessage()
@@ -52,6 +52,7 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -63,6 +64,8 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
 
     @Override
     public AccountSave findById(int id) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -72,6 +75,7 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
             statement.execute();
             resultSet = statement.getResultSet();
             if (resultSet.next()) {
+                connection.close();
                 return new AccountSave(
                         resultSet.getInt("id"),
                         GetAccountName.getEnum(resultSet.getString("account_name")),
@@ -91,6 +95,7 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -102,45 +107,11 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
 
     @Override
     public List<AccountSave> saveAll(List<AccountSave> toSave) {
-        PreparedStatement statement = null;
-        ResultSet resultSet = null;
         List<AccountSave> existingList = new ArrayList<>();
-        try {
-            for (AccountSave account : toSave) {
-                if (findById(account.getId()) == null) {
-                    String query = String.format("""
-                        INSERT INTO account(account_name, balance_id, currency_id, account_type)
-                        VALUES
-                        ('%s', ?, ?, '%s')
-                    """,
-                        account.getAccountName().toString().toLowerCase(),
-                        account.getAccountType().toString().toLowerCase());
-                    statement = connection.prepareStatement(query);
-                    statement.setInt(1, account.getBalanceId());
-                    statement.setInt(2, account.getCurrencyId());
-                    statement.executeUpdate();
-                    resultSet = statement.getResultSet();
-                    existingList.add(findById(account.getId()));
-                } else {
-                    existingList.add(update(account));
-                }
-            }
-        } catch (SQLException exception) {
-            System.out.println("Error occurred while saving all accounts :\n"
-                    + exception.getMessage()
-            );
-        } finally {
-            try {
-                if (statement != null) {
-                    statement.close();
-                }
-                if (resultSet != null) {
-                    resultSet.close();
-                }
-            } catch (Exception e) {
-                System.out.println("Error while closing :\n"
-                        + e.getMessage()
-                );
+        for (AccountSave account : toSave) {
+            AccountSave saved = save(account);
+            if (saved != null) {
+                existingList.add(saved);
             }
         }
         return existingList;
@@ -148,6 +119,8 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
 
     @Override
     public AccountSave save(AccountSave toSave) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -164,6 +137,7 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
                 statement.setInt(2, toSave.getCurrencyId());
                 statement.executeUpdate();
                 resultSet = statement.getResultSet();
+                connection.close();
                 return findById(toSave.getId());
             } else {
                 return update(toSave);
@@ -180,6 +154,7 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -191,6 +166,8 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
 
     @Override
     public AccountSave update(AccountSave toUpdate) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -210,6 +187,7 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
             statement.setInt(3, toUpdate.getId());
             statement.executeUpdate();
             resultSet = statement.getResultSet();
+            connection.close();
             return findById(toUpdate.getId());
         } catch (SQLException exception) {
             System.out.println("Error occurred while updating the account :\n"
@@ -223,6 +201,7 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()
@@ -232,6 +211,8 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
         return null;
     }
     public AccountSave updateBalanceIdById (int accountId, int balanceId) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -245,6 +226,7 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
             statement.setInt(2, accountId);
             statement.executeUpdate();
             resultSet = statement.getResultSet();
+            connection.close();
             return findById(accountId);
         } catch (SQLException exception) {
             System.out.println("Error occurred while updating the account balance id :\n"
@@ -258,6 +240,7 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
                 if (resultSet != null) {
                     resultSet.close();
                 }
+                connection.close();
             } catch (Exception e) {
                 System.out.println("Error while closing :\n"
                         + e.getMessage()

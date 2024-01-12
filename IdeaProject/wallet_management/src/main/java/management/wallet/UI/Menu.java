@@ -11,14 +11,6 @@ public class Menu implements Model {
     private static String action;
     private static int id;
     private final Scanner scanner = new Scanner(System.in);
-    AccountCrudOperation accountCrudOperation = new AccountCrudOperation();
-    BalanceCrudOperation balanceCrudOperation = new BalanceCrudOperation();
-    BalanceHistoryCrudOperation balanceHistoryCrudOperation = new BalanceHistoryCrudOperation();
-    CurrencyCrudOperation currencyCrudOperation = new CurrencyCrudOperation();
-    CurrencyValueCrudOperation currencyValueCrudOperation = new CurrencyValueCrudOperation();
-    TransactionCrudOperation transactionCrudOperation = new TransactionCrudOperation();
-    TransactionCategoriesCrudOperation transactionCategoriesCrudOperation = new TransactionCategoriesCrudOperation();
-    TransferHistoryCrudOperation transferHistoryCrudOperation = new TransferHistoryCrudOperation();
 
     public void chooseAction(int choice) {
         switch (choice) {
@@ -54,6 +46,7 @@ public class Menu implements Model {
 
     @Override
     public void accountModel() {
+        AccountCrudOperation accountCrudOperation = new AccountCrudOperation();
         if (action.equals("findAll")) {
             System.out.println(accountCrudOperation.findAll());
         } else if (action.equals("findById")) {
@@ -63,6 +56,7 @@ public class Menu implements Model {
 
     @Override
     public void balanceModel() {
+        BalanceCrudOperation balanceCrudOperation = new BalanceCrudOperation();
         if (action.equals("findAll")) {
             System.out.println(
                     balanceCrudOperation.findAll() + "\n"
@@ -74,6 +68,7 @@ public class Menu implements Model {
 
     @Override
     public void balanceHistoryModel() {
+        BalanceHistoryCrudOperation balanceHistoryCrudOperation = new BalanceHistoryCrudOperation();
         if (action.equals("findAll")) {
             System.out.println(balanceHistoryCrudOperation.findAll());
         } else if (action.equals("findById")) {
@@ -83,6 +78,7 @@ public class Menu implements Model {
 
     @Override
     public void currencyModel() {
+        CurrencyCrudOperation currencyCrudOperation = new CurrencyCrudOperation();
         if (action.equals("findAll")) {
             System.out.println(currencyCrudOperation.findAll());
         } else if (action.equals("findById")) {
@@ -92,6 +88,7 @@ public class Menu implements Model {
 
     @Override
     public void currencyValueModel() {
+        CurrencyValueCrudOperation currencyValueCrudOperation = new CurrencyValueCrudOperation();
         if (action.equals("findAll")) {
             System.out.println(currencyValueCrudOperation.findAll());
         } else if (action.equals("findById")) {
@@ -101,6 +98,7 @@ public class Menu implements Model {
 
     @Override
     public void transactionModel() {
+        TransactionCrudOperation transactionCrudOperation = new TransactionCrudOperation();
         if (action.equals("findAll")) {
             System.out.println(transactionCrudOperation.findAll());
         } else if (action.equals("findById")) {
@@ -110,6 +108,7 @@ public class Menu implements Model {
 
     @Override
     public void transactionCategoryModel() {
+        TransactionCategoriesCrudOperation transactionCategoriesCrudOperation = new TransactionCategoriesCrudOperation();
         if (action.equals("findAll")) {
             System.out.println(transactionCategoriesCrudOperation.findAll());
         } else if (action.equals("findById")) {
@@ -119,6 +118,7 @@ public class Menu implements Model {
 
     @Override
     public void transferHistoryModel() {
+        TransferHistoryCrudOperation transferHistoryCrudOperation = new TransferHistoryCrudOperation();
         if (action.equals("findAll")) {
             System.out.println(transferHistoryCrudOperation.findAll());
         } else if (action.equals("findById")) {
