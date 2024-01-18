@@ -3,9 +3,7 @@ package management.wallet.DAO;
 import management.wallet.dbConnection.DbConnect;
 import management.wallet.model.*;
 import management.wallet.model.Enum.GetTransactionType;
-import management.wallet.model.Enum.TransactionType;
 import org.springframework.stereotype.Repository;
-import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.sql.*;
@@ -15,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Repository
-public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
+public class TransactionCrudOperation implements CrudOperation<Transaction>{
     AccountCrudOperation accountCrudOperation = new AccountCrudOperation();
     CurrencyCrudOperation currencyCrudOperation = new CurrencyCrudOperation();
     BalanceCrudOperation balanceCrudOperation = new BalanceCrudOperation();
@@ -24,26 +22,26 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
     CurrencyValueCrudOperation currencyValueCrudOperation = new CurrencyValueCrudOperation();
 
     @Override
-    public List<TransactionSave> findAll() {
+    public List<Transaction> findAll() {
         DbConnect dbConnect = new DbConnect();
         Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
-        List<TransactionSave> transactions = new ArrayList<>();
+        List<Transaction> transactions = new ArrayList<>();
         try {
             String query = "SELECT * FROM transaction";
             statement = connection.prepareStatement(query);
             statement.execute();
-            resultSet = statement.executeQuery(query);
+            resultSet = statement.getResultSet();
             connection.close();
             while (resultSet.next()) {
-                transactions.add(new TransactionSave(
+                transactions.add(new Transaction(
                         resultSet.getInt("id"),
                         resultSet.getString("label"),
                         resultSet.getBigDecimal("amount"),
                         ((Timestamp) resultSet.getObject("transaction_date")).toLocalDateTime(),
                         GetTransactionType.getEnum(resultSet.getString("transaction_type")),
-                        resultSet.getInt("category_id"),
+                        resultSet.getInt("transaction_category_id"),
                         resultSet.getInt("account_id")
                 ));
             }
@@ -70,7 +68,7 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
     }
 
     @Override
-    public TransactionSave findById(int id) {
+    public Transaction findById(int id) {
         DbConnect dbConnect = new DbConnect();
         Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
@@ -83,7 +81,7 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
             resultSet = statement.getResultSet();
             connection.close();
             if (resultSet.next()) {
-                return new TransactionSave(
+                return new Transaction(
                         resultSet.getInt("id"),
                         resultSet.getString("label"),
                         resultSet.getBigDecimal("amount"),
@@ -116,10 +114,10 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
     }
 
     @Override
-    public List<TransactionSave> saveAll(List<TransactionSave> toSave) {
-        List<TransactionSave> existingList = new ArrayList<>();
-        for (TransactionSave transaction : toSave) {
-            TransactionSave saved  = save(transaction);
+    public List<Transaction> saveAll(List<Transaction> toSave) {
+        List<Transaction> existingList = new ArrayList<>();
+        for (Transaction transaction : toSave) {
+            Transaction saved  = save(transaction);
             if (saved != null) {
                 existingList.add(saved);
             }
@@ -128,7 +126,7 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
     }
 
     @Override
-    public TransactionSave save(TransactionSave toSave) {
+    public Transaction save(Transaction toSave) {
         DbConnect dbConnect = new DbConnect();
         Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
@@ -176,7 +174,7 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
     }
 
     @Override
-    public TransactionSave update(TransactionSave toUpdate) {
+    public Transaction update(Transaction toUpdate) {
         DbConnect dbConnect = new DbConnect();
         Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
@@ -221,12 +219,12 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
         return null;
     }
 
-    public List<TransactionSave> findByAccountId(int id) {
+    public List<Transaction> findByAccountId(int id) {
         DbConnect dbConnect = new DbConnect();
         Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
-        List<TransactionSave> transactionList = new ArrayList<>();
+        List<Transaction> transactionList = new ArrayList<>();
         try {
             String query = "SELECT * FROM transaction WHERE account_id = ? ";
             statement = connection.prepareStatement(query);
@@ -235,7 +233,7 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
             resultSet = statement.getResultSet();
             connection.close();
             while (resultSet.next()) {
-                transactionList.add(new TransactionSave(
+                transactionList.add(new Transaction(
                         resultSet.getInt("id"),
                         resultSet.getString("label"),
                         resultSet.getBigDecimal("amount"),
@@ -307,15 +305,15 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
         return null;
     }
 
-    public AccountSave makeTransaction(int accountId, TransactionSave transaction) {
+    public Account makeTransaction(int accountId, Transaction transaction) {
         PreparedStatement beginStatement = null;
         PreparedStatement commitStatement = null;
         PreparedStatement rollbackStatement = null;
         try {
             beginStatement = beginTransactional();
             beginStatement.execute();
-            AccountSave account = accountCrudOperation.findById(accountId);
-            TransactionSave transactionSaved = save(transaction);
+            Account account = accountCrudOperation.findById(accountId);
+            Transaction transactionSaved = save(transaction);
             Balance balanceSaved = balanceCrudOperation.save(new Balance(
                     0,
                     transactionSaved.getAmount(),
@@ -327,7 +325,7 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
                     account.getId(),
                     LocalDateTime.now()
             ));
-            AccountSave accountUpdated = accountCrudOperation.updateBalanceIdById(accountId, balanceSaved.getId());
+            Account accountUpdated = accountCrudOperation.updateBalanceIdById(accountId, balanceSaved.getId());
             if (
                     transactionSaved != null
                     &&
@@ -339,7 +337,7 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
             ) {
                 commitStatement = commitTransactional();
                 commitStatement.execute();
-                return new AccountSave(
+                return new Account(
                         account.getId(),
                         account.getAccountName(),
                         balanceSaved.getId(),
@@ -373,17 +371,17 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
         }
         return null;
     }
-    public AccountSave makeTransactionWithExchange(int creditAccountId, TransactionSave transaction) {
+    public Account makeTransactionWithExchange(int creditAccountId, Transaction transaction) {
         PreparedStatement beginStatement = null;
         PreparedStatement commitStatement = null;
         PreparedStatement rollbackStatement = null;
         try {
             beginStatement = beginTransactional();
             beginStatement.execute();
-            TransactionSave transactionSaved = save(transaction);
+            Transaction transactionSaved = save(transaction);
 
-            AccountSave debitAccount = accountCrudOperation.findById(transactionSaved.getAccountId());
-            AccountSave creditAccount = accountCrudOperation.findById(creditAccountId);
+            Account debitAccount = accountCrudOperation.findById(transactionSaved.getAccountId());
+            Account creditAccount = accountCrudOperation.findById(creditAccountId);
 
             Balance currentDebitBalance = balanceCrudOperation.findById(
                     debitAccount.getBalanceId()
@@ -442,10 +440,10 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
                         LocalDateTime.now()
                 ));
 
-                AccountSave debitAccountUpdated = accountCrudOperation.updateBalanceIdById(
+                Account debitAccountUpdated = accountCrudOperation.updateBalanceIdById(
                         debitAccount.getId(), debitAccount.getBalanceId()
                 );
-                AccountSave creditAccountUpdated = accountCrudOperation.updateBalanceIdById(
+                Account creditAccountUpdated = accountCrudOperation.updateBalanceIdById(
                         creditAccount.getId(), creditAccount.getBalanceId()
                 );
                 if (
@@ -465,7 +463,7 @@ public class TransactionCrudOperation implements CrudOperation<TransactionSave>{
                 ) {
                     commitStatement = commitTransactional();
                     commitStatement.execute();
-                    return new AccountSave(
+                    return new Account(
                             debitAccount.getId(),
                             debitAccount.getAccountName(),
                             debitBalanceSaved.getId(),

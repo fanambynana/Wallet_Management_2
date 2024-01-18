@@ -123,7 +123,7 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
                     """;
                 statement = connection.prepareStatement(query);
                 statement.setObject(1, toSave.getAmount());
-                statement.setObject(2, toSave.getUpdateDateTime());
+                statement.setObject(2, toSave.getUpdateDatetime());
                 statement.executeUpdate();
                 resultSet = statement.getResultSet();
                 connection.close();
@@ -168,7 +168,7 @@ public class BalanceCrudOperation implements CrudOperation<Balance> {
         """;
             statement = connection.prepareStatement(query);
             statement.setObject(1, toUpdate.getAmount());
-            statement.setObject(2, toUpdate.getUpdateDateTime());
+            statement.setObject(2, toUpdate.getUpdateDatetime());
             statement.setInt(3, toUpdate.getId());
             statement.executeUpdate();
             resultSet = statement.getResultSet();

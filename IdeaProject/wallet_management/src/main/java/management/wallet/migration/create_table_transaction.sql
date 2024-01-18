@@ -6,6 +6,6 @@ CREATE TABLE IF NOT EXISTS transaction(
     amount DECIMAL NOT NULL ,
     transaction_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     transaction_type TRANSACTION_TYPE NOT NULL,
-    category_id INT REFERENCES transaction_categories(id),
+    transaction_category_id INT REFERENCES transaction_categories(id),
     account_id INT NOT NULL REFERENCES account(id)
 );

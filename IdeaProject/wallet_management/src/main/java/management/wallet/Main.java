@@ -35,7 +35,7 @@ public class Main {
         }
     }
     public void runInsert() {
-        System.out.println(accountCrudOperation.save(new AccountSave(
+        System.out.println(accountCrudOperation.save(new Account(
                 3,
                 AccountName.CURRENT_ACCOUNT,
                 3,
@@ -70,7 +70,7 @@ public class Main {
                 "Foods & Drinking",
                 CategoryGroup.EXPENSE
         )));
-        System.out.println(transactionCrudOperation.save(new TransactionSave(
+        System.out.println(transactionCrudOperation.save(new Transaction(
                 7,
                 "New Year Gift",
                 BigDecimal.valueOf(10000),
@@ -79,7 +79,7 @@ public class Main {
                 4,
                 1
         )));
-        System.out.println(transactionCrudOperation.save(new TransactionSave(
+        System.out.println(transactionCrudOperation.save(new Transaction(
                 8,
                 "New Year Gift",
                 BigDecimal.valueOf(10000),
@@ -97,12 +97,7 @@ public class Main {
     }
     public static void main(String[] args) {
         Main main = new Main();
-        // main.runMain();
-        main.runInsert();
+        main.runMain();
+        //main.runInsert();
     }
-
-    /*
-        Connection error :
-        FATAL: remaining connection slots are reserved for non-replication superuser connections
-     */
 }

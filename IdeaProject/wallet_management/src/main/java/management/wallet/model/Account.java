@@ -2,18 +2,17 @@ package management.wallet.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import management.wallet.model.Enum.AccountName;
 import management.wallet.model.Enum.AccountType;
 
-import java.util.List;
-
 @AllArgsConstructor
+@NoArgsConstructor
 @Data
 public class Account {
     private int id;
     private AccountName accountName;
-    private Balance balance;
-    private List<Transaction> transactions;
-    private Currency currency;
+    private int balanceId;
+    private int currencyId;
     private AccountType accountType;
 }
