@@ -130,7 +130,7 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
                 statement.setInt(1, toSave.getExchangeSourceId());
                 statement.setInt(2, toSave.getExchangeDestinationId());
                 statement.setBigDecimal(3, toSave.getExchangeValue());
-                statement.setObject(4, toSave.getExchangeDateTime());
+                statement.setObject(4, toSave.getExchangeDatetime());
                 statement.executeUpdate();
                 resultSet = statement.getResultSet();
                 connection.close();
@@ -181,7 +181,7 @@ public class CurrencyValueCrudOperation implements CrudOperation<CurrencyValue> 
             statement.setInt(1, toUpdate.getExchangeSourceId());
             statement.setInt(2, toUpdate.getExchangeDestinationId());
             statement.setBigDecimal(3, toUpdate.getExchangeValue());
-            statement.setObject(4, toUpdate.getExchangeDateTime());
+            statement.setObject(4, toUpdate.getExchangeDatetime());
             statement.setInt(5, toUpdate.getId());
             statement.executeUpdate();
             resultSet = statement.getResultSet();

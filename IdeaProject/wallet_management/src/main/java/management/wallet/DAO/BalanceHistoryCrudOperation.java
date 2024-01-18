@@ -125,7 +125,7 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
                 statement = connection.prepareStatement(query);
                 statement.setInt(1, toSave.getBalanceId());
                 statement.setInt(2, toSave.getAccountId());
-                statement.setObject(3, toSave.getDateTime());
+                statement.setObject(3, toSave.getDatetime());
                 statement.execute();
                 resultSet = statement.getResultSet();
                 connection.close();
@@ -171,7 +171,7 @@ public class BalanceHistoryCrudOperation implements CrudOperation<BalanceHistory
             statement = connection.prepareStatement(query);
             statement.setInt(1, toUpdate.getBalanceId());
             statement.setInt(2, toUpdate.getAccountId());
-            statement.setObject(3, toUpdate.getDateTime());
+            statement.setObject(3, toUpdate.getDatetime());
             statement.setInt(4, toUpdate.getId());
             statement.executeUpdate();
             resultSet = statement.getResultSet();

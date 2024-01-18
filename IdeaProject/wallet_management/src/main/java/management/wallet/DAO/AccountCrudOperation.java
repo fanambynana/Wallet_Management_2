@@ -1,13 +1,10 @@
 package management.wallet.DAO;
 
 import management.wallet.dbConnection.DbConnect;
-import management.wallet.model.AccountSave;
-import management.wallet.model.Enum.AccountName;
-import management.wallet.model.Enum.AccountType;
+import management.wallet.model.Account;
 import management.wallet.model.Enum.GetAccountName;
 import management.wallet.model.Enum.GetAccountType;
 import org.springframework.stereotype.Repository;
-import org.springframework.stereotype.Service;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -17,21 +14,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Repository
-public class AccountCrudOperation implements CrudOperation<AccountSave>{
+public class AccountCrudOperation implements CrudOperation<Account>{
     @Override
-    public List<AccountSave> findAll() {
+    public List<Account> findAll() {
         DbConnect dbConnect = new DbConnect();
         Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
-        List<AccountSave> accountList = new ArrayList<>();
+        List<Account> accountList = new ArrayList<>();
         try {
             String query = "SELECT * FROM account";
             statement = connection.prepareStatement(query);
             statement.execute();
             resultSet = statement.getResultSet();
             while (resultSet.next()) {
-                accountList.add(new AccountSave(
+                accountList.add(new Account(
                         resultSet.getInt("id"),
                         GetAccountName.getEnum(resultSet.getString("account_name")),
                         resultSet.getInt("balance_id"),
@@ -63,7 +60,7 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
     }
 
     @Override
-    public AccountSave findById(int id) {
+    public Account findById(int id) {
         DbConnect dbConnect = new DbConnect();
         Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
@@ -76,7 +73,7 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
             resultSet = statement.getResultSet();
             if (resultSet.next()) {
                 connection.close();
-                return new AccountSave(
+                return new Account(
                         resultSet.getInt("id"),
                         GetAccountName.getEnum(resultSet.getString("account_name")),
                         resultSet.getInt("balance_id"),
@@ -106,10 +103,10 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
     }
 
     @Override
-    public List<AccountSave> saveAll(List<AccountSave> toSave) {
-        List<AccountSave> existingList = new ArrayList<>();
-        for (AccountSave account : toSave) {
-            AccountSave saved = save(account);
+    public List<Account> saveAll(List<Account> toSave) {
+        List<Account> existingList = new ArrayList<>();
+        for (Account account : toSave) {
+            Account saved = save(account);
             if (saved != null) {
                 existingList.add(saved);
             }
@@ -118,7 +115,7 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
     }
 
     @Override
-    public AccountSave save(AccountSave toSave) {
+    public Account save(Account toSave) {
         DbConnect dbConnect = new DbConnect();
         Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
@@ -165,7 +162,7 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
     }
 
     @Override
-    public AccountSave update(AccountSave toUpdate) {
+    public Account update(Account toUpdate) {
         DbConnect dbConnect = new DbConnect();
         Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
@@ -210,7 +207,7 @@ public class AccountCrudOperation implements CrudOperation<AccountSave>{
         }
         return null;
     }
-    public AccountSave updateBalanceIdById (int accountId, int balanceId) {
+    public Account updateBalanceIdById (int accountId, int balanceId) {
         DbConnect dbConnect = new DbConnect();
         Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
