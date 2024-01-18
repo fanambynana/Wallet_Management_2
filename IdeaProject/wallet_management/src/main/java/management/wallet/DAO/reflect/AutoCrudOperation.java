@@ -1,6 +1,5 @@
 package management.wallet.DAO.reflect;
 
-import management.wallet.DAO.reflect.test.withPostgre.CrudOpClass;
 import management.wallet.dbConnection.DbConnect;
 import management.wallet.model.*;
 import management.wallet.model.Enum.*;
@@ -251,7 +250,6 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
 
     @Override
     public List<T> findAll() {
-        Currency currency = new Currency();
         DbConnect dbConnect = new DbConnect();
         Connection connection = dbConnect.createConnection();
         Class<?> clazz = getT().getClass();
@@ -268,7 +266,9 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
             connection.close();
             return returnObjectModel(resultSet);
         } catch (SQLException exception) {
-            System.out.println(String.format("Error occurred while finding all %ss  :\n%s" ,className, exception.getMessage()));
+            System.out.println(String.format("Error occurred while finding all %ss  :\n%s",
+                    className,
+                    exception.getMessage()));
         } finally {
             try {
                 if (statement != null) {
@@ -285,40 +285,5 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
             }
         }
         return list;
-    }
-
-    public static void main(String[] args) {
-        CrudOpClass<Currency> currencyCrudOp = new CrudOpClass<>(new Currency());
-        CrudOpClass<Account> accountCrudOpClass = new CrudOpClass<>(new Account());
-        CrudOpClass<Balance> balanceCrudOpClass = new CrudOpClass<>(new Balance());
-        CrudOpClass<BalanceHistory> balanceHistoryCrudOpClass = new CrudOpClass<>(new BalanceHistory());
-        CrudOpClass<CurrencyValue> currencyValueCrudOpClass = new CrudOpClass<>(new CurrencyValue());
-        CrudOpClass<Transaction> transactionCrudOpClass = new CrudOpClass<>(new Transaction());
-        CrudOpClass<TransactionCategories> transactionCategoriesCrudOpClass = new CrudOpClass<>(new TransactionCategories());
-        CrudOpClass<TransferHistory> transferHistoryCrudOpClass = new CrudOpClass<>(new TransferHistory());
-
-        System.out.println(currencyCrudOp.save(
-                new Currency(10, "ts10", "TS10")
-        ));
-
-        System.out.println(accountCrudOpClass.save(
-                new Account(
-                        10,
-                        AccountName.CURRENT_ACCOUNT,
-                        1,
-                        3,
-                        AccountType.CASH
-                )
-        ));
-
-        System.out.println(currencyCrudOp.findAll());
-        System.out.println(accountCrudOpClass.findAll());
-        System.out.println(balanceCrudOpClass.findAll());
-        System.out.println(balanceHistoryCrudOpClass.findAll());
-        System.out.println(currencyValueCrudOpClass.findAll());
-        System.out.println(transactionCategoriesCrudOpClass.findAll());
-        System.out.println(transactionCrudOpClass.findAll());
-        System.out.println(transferHistoryCrudOpClass.findAll());
-
     }
 }
