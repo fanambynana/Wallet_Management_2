@@ -1,7 +1,7 @@
 package management.wallet.DAO;
 
 import management.wallet.dbConnection.DbConnect;
-import management.wallet.model.AccountSave;
+import management.wallet.model.Account;
 import management.wallet.model.Enum.*;
 import management.wallet.model.TransferHistory;
 import org.springframework.stereotype.Repository;
@@ -128,7 +128,7 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
                 statement = connection.prepareStatement(query);
                 statement.setInt(1, toSave.getDebitTransactionId());
                 statement.setInt(2, toSave.getCreditTransactionId());
-                statement.setObject(3, toSave.getDateTime());
+                statement.setObject(3, toSave.getDatetime());
                 statement.executeUpdate();
                 resultSet = statement.getResultSet();
                 connection.close();
@@ -177,7 +177,7 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
             statement = connection.prepareStatement(query);
             statement.setInt(1, toUpdate.getDebitTransactionId());
             statement.setInt(2, toUpdate.getCreditTransactionId());
-            statement.setObject(3, toUpdate.getDateTime());
+            statement.setObject(3, toUpdate.getDatetime());
             statement.setInt(4, toUpdate.getId());
             statement.executeUpdate();
             resultSet = statement.getResultSet();
@@ -205,12 +205,12 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
         return null;
     }
 
-    public List<AccountSave> findByIntervalReturnDebitAccount(LocalDateTime from, LocalDateTime to) {
+    public List<Account> findByIntervalReturnDebitAccount(LocalDateTime from, LocalDateTime to) {
         DbConnect dbConnect = new DbConnect();
         Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
-        List<AccountSave> accountList = new ArrayList<>();
+        List<Account> accountList = new ArrayList<>();
         try {
             String query = """
                 SELECT
@@ -229,7 +229,7 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
             resultSet  = statement.getResultSet();
             connection.close();
             while (resultSet.next()) {
-                accountList.add(new AccountSave(
+                accountList.add(new Account(
                         resultSet.getInt("id"),
                         GetAccountName.getEnum(resultSet.getString("account_name")),
                         resultSet.getInt("balance_id"),
@@ -258,12 +258,12 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
         }
         return accountList;
     }
-    public  List<AccountSave> findByIntervalReturnCreditAccount(LocalDateTime from, LocalDateTime to) {
+    public  List<Account> findByIntervalReturnCreditAccount(LocalDateTime from, LocalDateTime to) {
         DbConnect dbConnect = new DbConnect();
         Connection connection = dbConnect.createConnection();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
-        List<AccountSave> accountList = new ArrayList<>();
+        List<Account> accountList = new ArrayList<>();
         try {
             String query = """
                 SELECT
@@ -282,7 +282,7 @@ public class TransferHistoryCrudOperation implements CrudOperation<TransferHisto
             resultSet  = statement.getResultSet();
             connection.close();
             while (resultSet.next()) {
-                accountList.add(new AccountSave(
+                accountList.add(new Account(
                         resultSet.getInt("id"),
                         GetAccountName.getEnum(resultSet.getString("account_name")),
                         resultSet.getInt("balance_id"),
