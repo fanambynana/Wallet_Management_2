@@ -1,6 +1,8 @@
 package management.wallet.DAO.reflect;
 
+import java.util.List;
+
 public interface CrudOperation<T> {
-    T findAll();
+    List<T> findAll();
     T save(T toSave);
 }
