@@ -1,5 +1,8 @@
 package management.wallet.DAO.reflect;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
 import management.wallet.dbConnection.DbConnect;
 import management.wallet.model.*;
 import management.wallet.model.Enum.*;
@@ -15,13 +18,122 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
+@AllArgsConstructor
 public class AutoCrudOperation<T> implements CrudOperation<T> {
     private final T t;
-    public AutoCrudOperation(T t) {
-        this.t = t;
+
+    @Override
+    public T save(T toSave) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+
+        Class<?> clazz = toSave.getClass();
+        String className = clazz.getSimpleName();
+        Field[] fields = clazz.getDeclaredFields();
+        StringBuilder columns = new StringBuilder();
+        StringBuilder values = new StringBuilder();
+        List<Field> fieldList = new ArrayList<>();
+        T returned = null;
+
+        try {
+            connection = dbConnect.createConnection();
+            for (Field field : fields) {
+                field.setAccessible(true);
+                if (!columns.isEmpty()) {
+                    columns.append(", ");
+                    values.append(", ");
+                }
+                columns.append(getSnakeCase(field.getName()));
+                if (
+                    field.getType() == AccountName.class
+                    || field.getType() == AccountType.class
+                    || field.getType() == CategoryGroup.class
+                    || field.getType() == TransactionType.class
+                ) {
+                    values.append(String.format("'%s'",
+                            field.get(toSave).toString().toLowerCase()));
+                } else {
+                    fieldList.add(field);
+                    values.append("?");
+                }
+            }
+            String insertQuery = String.format(
+                    "INSERT INTO %s (" + columns + ") VALUES (" + values + ")",
+                    getSnakeCase(className));
+            preparedStatement = connection.prepareStatement(insertQuery);
+            int parameterIndex = 1;
+            for (Field field : fieldList) {
+                preparedStatement.setObject(parameterIndex++, field.get(toSave));
+            }
+            preparedStatement.executeUpdate();
+            returned = toSave;
+        } catch (Exception exception) {
+            System.err.println(
+                    String.format("Error occurred while saving the %s :\n  %s\n  > %s",
+                            className,
+                            toSave,
+                            exception.getMessage()
+                    )
+            );
+        } finally {
+            try {
+                if (preparedStatement != null) {
+                    preparedStatement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (Exception e) {
+                System.err.println("Error while closing :\n"
+                        + e.getMessage()
+                );
+            }
+        }
+        return returned;
     }
-    public T getT() {
-        return t;
+
+    @Override
+    public List<T> findAll() {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        Class<?> clazz = getT().getClass();
+        String className = clazz.getSimpleName();
+        List<T> tList  = new ArrayList<>();
+
+        try {
+            connection = dbConnect.createConnection();
+            String query = "SELECT * FROM " + getSnakeCase(className);
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.execute();
+            resultSet  = preparedStatement.getResultSet();
+            tList = returnObjectModel(resultSet);
+        } catch (Exception exception) {
+            System.err.println(String.format("Error occurred while finding all %ss  :\n  %s",
+                    className,
+                    exception.getMessage()));
+        } finally {
+            try {
+                if (preparedStatement != null) {
+                    preparedStatement.close();
+                }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error while closing :\n"
+                        + e.getMessage()
+                );
+            }
+        }
+        return tList;
     }
 
     public static String getSnakeCase(String name) {
@@ -194,96 +306,5 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
             }
         }
         return tList;
-    }
-
-    @Override
-    public T save(T toSave) {
-        DbConnect dbConnect = new DbConnect();
-        Connection connection = dbConnect.createConnection();
-        Class<?> clazz = toSave.getClass();
-        String className = clazz.getSimpleName();
-        Field[] fields = clazz.getDeclaredFields();
-        StringBuilder columns = new StringBuilder();
-        StringBuilder values = new StringBuilder();
-        List<Field> fieldList = new ArrayList<>();
-
-        try {
-            for (Field field : fields) {
-                field.setAccessible(true);
-                if (!columns.isEmpty()) {
-                    columns.append(", ");
-                    values.append(", ");
-                }
-                columns.append(getSnakeCase(field.getName()));
-                if (
-                        field.getType() == AccountName.class
-                                || field.getType() == AccountType.class
-                                || field.getType() == CategoryGroup.class
-                                || field.getType() == TransactionType.class
-                ) {
-                    values.append(String.format("'%s'",
-                            field.get(toSave).toString().toLowerCase()));
-                } else {
-                    fieldList.add(field);
-                    values.append("?");
-                }
-            }
-            String insertQuery = String.format(
-                    "INSERT INTO %s (" + columns + ") VALUES (" + values + ")",
-                    getSnakeCase(className));
-            PreparedStatement preparedStatement = connection.prepareStatement(insertQuery);
-            int parameterIndex = 1;
-            for (Field field : fieldList) {
-                preparedStatement.setObject(parameterIndex++, field.get(toSave));
-            }
-            preparedStatement.executeUpdate();
-            return toSave;
-        } catch (Exception exception) {
-            System.out.println(
-                    String.format("Error occurred while saving the %s :\n%s",
-                            className,
-                            exception.getMessage()
-                    ));
-        }
-        return null;
-    }
-
-    @Override
-    public List<T> findAll() {
-        DbConnect dbConnect = new DbConnect();
-        Connection connection = dbConnect.createConnection();
-        Class<?> clazz = getT().getClass();
-        String className = clazz.getSimpleName();
-        PreparedStatement statement = null;
-        ResultSet resultSet = null;
-        List<T> list  = new ArrayList<>();
-
-        try {
-            String query = "SELECT * FROM " + getSnakeCase(className);
-            statement = connection.prepareStatement(query);
-            statement.execute();
-            resultSet  = statement.getResultSet();
-            connection.close();
-            return returnObjectModel(resultSet);
-        } catch (SQLException exception) {
-            System.out.println(String.format("Error occurred while finding all %ss  :\n%s",
-                    className,
-                    exception.getMessage()));
-        } finally {
-            try {
-                if (statement != null) {
-                    statement.close();
-                }
-                if (resultSet != null) {
-                    resultSet.close();
-                }
-                connection.close();
-            } catch (Exception e) {
-                System.out.println("Error while closing :\n"
-                        + e.getMessage()
-                );
-            }
-        }
-        return list;
     }
 }
