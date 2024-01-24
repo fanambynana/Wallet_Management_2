@@ -28,6 +28,7 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
         DbConnect dbConnect = new DbConnect();
         Connection connection = null;
         PreparedStatement preparedStatement = null;
+
         Class<?> clazz = toSave.getClass();
         String className = clazz.getSimpleName();
         Field[] fields = clazz.getDeclaredFields();
@@ -96,28 +97,29 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
     @Override
     public List<T> findAll() {
         DbConnect dbConnect = new DbConnect();
-        Connection connection = dbConnect.createConnection();
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
         Class<?> clazz = getT().getClass();
         String className = clazz.getSimpleName();
-        PreparedStatement statement = null;
-        ResultSet resultSet = null;
-        List<T> list  = new ArrayList<>();
+        List<T> tList  = new ArrayList<>();
 
         try {
+            connection = dbConnect.createConnection();
             String query = "SELECT * FROM " + getSnakeCase(className);
-            statement = connection.prepareStatement(query);
-            statement.execute();
-            resultSet  = statement.getResultSet();
-            connection.close();
-            return returnObjectModel(resultSet);
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.execute();
+            resultSet  = preparedStatement.getResultSet();
+            tList = returnObjectModel(resultSet);
         } catch (Exception exception) {
             System.err.println(String.format("Error occurred while finding all %ss  :\n  %s",
                     className,
                     exception.getMessage()));
         } finally {
             try {
-                if (statement != null) {
-                    statement.close();
+                if (preparedStatement != null) {
+                    preparedStatement.close();
                 }
                 if (resultSet != null) {
                     resultSet.close();
@@ -131,7 +133,7 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
                 );
             }
         }
-        return list;
+        return tList;
     }
 
     public static String getSnakeCase(String name) {
