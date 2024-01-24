@@ -20,7 +20,7 @@ import java.util.List;
 @Getter
 @AllArgsConstructor
 public class AutoCrudOperation<T> implements CrudOperation<T> {
-    private final T t;
+    private final T model;
 
     @Override
     public T save(T toSave) {
@@ -67,7 +67,7 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
                 preparedStatement.setObject(parameterIndex++, field.get(toSave));
             }
             preparedStatement.executeUpdate();
-            returned = toSave;
+            returned = findById(getModelId(toSave));
         } catch (Exception exception) {
             System.err.println(
                     String.format("Error occurred while saving the %s :\n  %s\n  > %s",
@@ -85,7 +85,7 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
                     connection.close();
                 }
             } catch (Exception e) {
-                System.err.println("Error while closing :\n"
+                System.err.println("Error while closing :\n  > "
                         + e.getMessage()
                 );
             }
@@ -99,9 +99,9 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
 
-        Class<?> clazz = getT().getClass();
+        Class<?> clazz = getModel().getClass();
         String className = clazz.getSimpleName();
-        boolean returned = false;
+        boolean isDeleted = false;
 
         try {
             connection = dbConnect.createConnection();
@@ -111,8 +111,7 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
                     id
             );
             preparedStatement = connection.prepareStatement(query);
-            preparedStatement.execute();
-            returned = true;
+            isDeleted = preparedStatement.executeUpdate() > 0;
         } catch (Exception exception) {
             System.err.println(
                     String.format("Error occurred while deleting the %s with id %s :\n  > %s",
@@ -129,7 +128,86 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
                     connection.close();
                 }
             } catch (Exception e) {
-                System.err.println("Error while closing :\n"
+                System.err.println("Error while closing :\n  > "
+                        + e.getMessage()
+                );
+            }
+        }
+        return isDeleted;
+    }
+
+    @Override
+    public T update(T toUpdate) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+
+        Class<?> clazz = toUpdate.getClass();
+        String className = clazz.getSimpleName();
+        Field[] fields = clazz.getDeclaredFields();
+        StringBuilder dataUpdate = new StringBuilder();
+        List<Field> fieldList = new ArrayList<>();
+        T returned = null;
+
+        try {
+            connection = dbConnect.createConnection();
+            for (Field field : fields) {
+                field.setAccessible(true);
+                if (!dataUpdate.isEmpty()) {
+                    dataUpdate.append(", ");
+                }
+                if (
+                    field.getType() == AccountName.class
+                    || field.getType() == AccountType.class
+                    || field.getType() == CategoryGroup.class
+                    || field.getType() == TransactionType.class
+                ) {
+                    dataUpdate.append(
+                            String.format("%s = '%s'",
+                            getSnakeCase(field.getName()),
+                            field.get(toUpdate).toString().toLowerCase())
+                    );
+                } else {
+                    dataUpdate.append(
+                            String.format(
+                                    "%s = ?",
+                                    getSnakeCase(field.getName())
+                            )
+                    );
+                    fieldList.add(field);
+                }
+            }
+            String query = String.format(
+                    "UPDATE %s SET %s WHERE id = %s",
+                    getSnakeCase(className),
+                    dataUpdate,
+                    getModelId(toUpdate)
+            );
+            preparedStatement = connection.prepareStatement(query);
+            int parameterIndex = 1;
+            for (Field field : fieldList) {
+                preparedStatement.setObject(parameterIndex++, field.get(toUpdate));
+            }
+            preparedStatement.executeUpdate();
+            returned = findById(getModelId(toUpdate));
+        } catch (Exception exception) {
+            System.err.println(
+                    String.format("Error occurred while updating the %s :\n  %s\n  > %s",
+                            className,
+                            toUpdate,
+                            exception.getMessage()
+                    )
+            );
+        } finally {
+            try {
+                if (preparedStatement != null) {
+                    preparedStatement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (Exception e) {
+                System.err.println("Error while closing :\n  > "
                         + e.getMessage()
                 );
             }
@@ -144,9 +222,9 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
 
-        Class<?> clazz = getT().getClass();
+        Class<?> clazz = getModel().getClass();
         String className = clazz.getSimpleName();
-        String findingError = String.format("Error occurred while finding the %s with id %s :\n  ",
+        String findingError = String.format("Error occurred while finding the %s with id %s :\n  > ",
                 className,
                 id
         );
@@ -162,7 +240,7 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
             preparedStatement = connection.prepareStatement(query);
             preparedStatement.execute();
             resultSet = preparedStatement.getResultSet();
-            List<T> result = returnObjectModel(resultSet);
+            List<T> result = getModelObject(resultSet);
             if (!result.isEmpty()) {
                 returned = result.get(0);
             } else {
@@ -182,7 +260,7 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
                     connection.close();
                 }
             } catch (Exception e) {
-                System.err.println("Error while closing :\n"
+                System.err.println("Error while closing :\n  > "
                         + e.getMessage()
                 );
             }
@@ -197,7 +275,7 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
 
-        Class<?> clazz = getT().getClass();
+        Class<?> clazz = getModel().getClass();
         String className = clazz.getSimpleName();
         List<T> tList  = new ArrayList<>();
 
@@ -207,9 +285,9 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
             preparedStatement = connection.prepareStatement(query);
             preparedStatement.execute();
             resultSet  = preparedStatement.getResultSet();
-            tList = returnObjectModel(resultSet);
+            tList = getModelObject(resultSet);
         } catch (Exception exception) {
-            System.err.println(String.format("Error occurred while finding all %ss  :\n  %s",
+            System.err.println(String.format("Error occurred while finding all %ss  :\n  > %s",
                     className,
                     exception.getMessage()));
         } finally {
@@ -224,7 +302,7 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
                     connection.close();
                 }
             } catch (Exception e) {
-                System.err.println("Error while closing :\n"
+                System.err.println("Error while closing :\n  > "
                         + e.getMessage()
                 );
             }
@@ -232,26 +310,39 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
         return tList;
     }
 
-    public static String getSnakeCase(String name) {
-        StringBuilder sb = new StringBuilder();
+    private Integer getModelId(Object objectModel) throws Exception{
+        Class<?> clazz = getModel().getClass();
+        Field[] fields = clazz.getDeclaredFields();
+        Integer id = null;
+        for (Field field : fields) {
+            field.setAccessible(true);
+            if (field.getName().equals("id")) {
+                id = (int) field.get(objectModel);
+            }
+        }
+        return id;
+    }
+
+    private static String getSnakeCase(String name) {
+        StringBuilder stringBuilder = new StringBuilder();
         for (Character c : name.toCharArray()) {
-            if (!sb.isEmpty()) {
+            if (!stringBuilder.isEmpty()) {
                 if (c.toString().toUpperCase().equals(c.toString())) {
-                    sb.append("_").append(c);
+                    stringBuilder.append("_").append(c);
                     continue;
                 }
             }
-            sb.append(c);
+            stringBuilder.append(c);
         }
-        return sb.toString().toLowerCase();
+        return stringBuilder.toString().toLowerCase();
     }
 
-    public List<T> returnObjectModel(ResultSet resultSet) throws Exception {
-        Class<?> clazz = getT().getClass();
+    public List<T> getModelObject(ResultSet resultSet) throws Exception {
+        Class<?> clazz = getModel().getClass();
         Field[] fields = clazz.getDeclaredFields();
         List<T> tList = new ArrayList<>();
         while (resultSet.next()) {
-            if (getT().getClass() == Currency.class) {
+            if (getModel().getClass() == Currency.class) {
                 Currency result = new Currency();
                 int stringCount = 0;
                 for (Field field : fields) {
@@ -268,7 +359,7 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
                     }
                 }
                 tList.add((T) result);
-            } else if (getT().getClass() == Account.class){
+            } else if (getModel().getClass() == Account.class){
                 Account result = new Account();
                 int intCount = 0;
                 for (Field field : fields) {
@@ -289,7 +380,7 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
                     }
                 }
                 tList.add((T) result);
-            } else if (getT().getClass() == Balance.class) {
+            } else if (getModel().getClass() == Balance.class) {
                 Balance result = new Balance();
                 for (Field field : fields) {
                     Type fieldType = field.getType();
@@ -302,7 +393,7 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
                     }
                 }
                 tList.add((T) result);
-            } else if (getT().getClass() == BalanceHistory.class) {
+            } else if (getModel().getClass() == BalanceHistory.class) {
                 BalanceHistory result = new BalanceHistory();
                 int intCount = 0;
                 for (Field field : fields) {
@@ -321,7 +412,7 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
                     }
                 }
                 tList.add((T) result);
-            } else if (getT().getClass() == CurrencyValue.class) {
+            } else if (getModel().getClass() == CurrencyValue.class) {
                 CurrencyValue result = new CurrencyValue();
                 int intCount = 0;
                 for (Field field : fields) {
@@ -342,7 +433,7 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
                     }
                 }
                 tList.add((T) result);
-            } else if (getT().getClass() == Transaction.class) {
+            } else if (getModel().getClass() == Transaction.class) {
                 Transaction result = new Transaction();
                 int intCount = 0;
                 for (Field field : fields) {
@@ -367,7 +458,7 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
                     }
                 }
                 tList.add((T) result);
-            } else if (getT().getClass() == TransactionCategories.class) {
+            } else if (getModel().getClass() == TransactionCategories.class) {
                 TransactionCategories result = new TransactionCategories();
                 for (Field field : fields) {
                     Type fieldType = field.getType();
@@ -380,7 +471,7 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
                     }
                 }
                 tList.add((T) result);
-            } else if (getT().getClass() == TransferHistory.class) {
+            } else if (getModel().getClass() == TransferHistory.class) {
                 TransferHistory result = new TransferHistory();
                 int intCount = 0;
                 for (Field field : fields) {
