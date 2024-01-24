@@ -7,4 +7,5 @@ public interface CrudOperation<T> {
     T findById(int id);
     T save(T toSave);
     boolean deleteById(int id);
+    T update(T toUpdate);
 }
