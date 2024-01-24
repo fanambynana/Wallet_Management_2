@@ -95,6 +95,59 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
     }
 
     @Override
+    public T findById(int id) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        Class<?> clazz = getT().getClass();
+        String className = clazz.getSimpleName();
+        String findingError = String.format("Error occurred while finding the %s with id %s :\n  ",
+                className,
+                id
+        );
+        T returned = null;
+
+        try {
+            connection = dbConnect.createConnection();
+            String query = String.format(
+                    "SELECT * FROM %s WHERE id = %s",
+                    getSnakeCase(className),
+                    id
+            );
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.execute();
+            resultSet = preparedStatement.getResultSet();
+            List<T> result = returnObjectModel(resultSet);
+            if (!result.isEmpty()) {
+                returned = result.get(0);
+            } else {
+                System.err.println(findingError + className + " does not exists");
+            }
+        } catch (Exception exception) {
+            System.err.println(findingError + exception.getMessage());
+        } finally {
+            try {
+                if (preparedStatement != null) {
+                    preparedStatement.close();
+                }
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (Exception e) {
+                System.err.println("Error while closing :\n"
+                        + e.getMessage()
+                );
+            }
+        }
+        return returned;
+    }
+
+    @Override
     public List<T> findAll() {
         DbConnect dbConnect = new DbConnect();
         Connection connection = null;
