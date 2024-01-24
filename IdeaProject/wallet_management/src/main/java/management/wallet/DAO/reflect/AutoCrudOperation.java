@@ -13,7 +13,6 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,6 +75,50 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
                             toSave,
                             exception.getMessage()
                     )
+            );
+        } finally {
+            try {
+                if (preparedStatement != null) {
+                    preparedStatement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (Exception e) {
+                System.err.println("Error while closing :\n"
+                        + e.getMessage()
+                );
+            }
+        }
+        return returned;
+    }
+
+    @Override
+    public boolean deleteById(int id) {
+        DbConnect dbConnect = new DbConnect();
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+
+        Class<?> clazz = getT().getClass();
+        String className = clazz.getSimpleName();
+        boolean returned = false;
+
+        try {
+            connection = dbConnect.createConnection();
+            String query = String.format(
+                    "DELETE FROM %s WHERE id = %s",
+                    getSnakeCase(className),
+                    id
+            );
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.execute();
+            returned = true;
+        } catch (Exception exception) {
+            System.err.println(
+                    String.format("Error occurred while deleting the %s with id %s :\n  > %s",
+                    className,
+                    id,
+                    exception.getMessage())
             );
         } finally {
             try {
@@ -181,7 +224,7 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
                     connection.close();
                 }
             } catch (Exception e) {
-                System.out.println("Error while closing :\n"
+                System.err.println("Error while closing :\n"
                         + e.getMessage()
                 );
             }
@@ -203,7 +246,7 @@ public class AutoCrudOperation<T> implements CrudOperation<T> {
         return sb.toString().toLowerCase();
     }
 
-    public List<T> returnObjectModel(ResultSet resultSet) throws SQLException {
+    public List<T> returnObjectModel(ResultSet resultSet) throws Exception {
         Class<?> clazz = getT().getClass();
         Field[] fields = clazz.getDeclaredFields();
         List<T> tList = new ArrayList<>();
